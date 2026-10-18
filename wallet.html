@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ví tiền — tCloudPhone</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>☁</text></svg>">
+<style>
+  :root{
+    --bg:#05070c; --panel:#0d1219; --panel-2:#121a26;
+    --border:#1e2836; --text:#e6edf3; --muted:#8b98a9;
+    --accent:#4f8cff; --accent-2:#22c55e; --warn:#f59e0b; --danger:#ef4444;
+    --grad:linear-gradient(135deg,#4f8cff 0%,#22c55e 100%);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  a{color:inherit;text-decoration:none}
+
+  nav{background:rgba(5,7,12,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+  .nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:68px;display:flex;align-items:center;justify-content:space-between}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px}
+  .logo .dot{width:34px;height:34px;border-radius:10px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:16px}
+  .logo span{color:var(--accent)}
+  .nav-links{display:flex;gap:24px;align-items:center}
+  .nav-links a{font-size:14px;color:var(--muted);transition:.15s;font-weight:500}
+  .nav-links a:hover, .nav-links a.active{color:var(--accent)}
+  .btn{padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);cursor:pointer;font-size:14px;font-weight:600;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{background:#1f2937;border-color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:#3b7bf0}
+  .btn.ghost{background:transparent}
+
+  .container{max-width:1000px;margin:0 auto;padding:40px 24px}
+  h1{font-size:28px;margin-bottom:8px;font-weight:800}
+  .subtitle{color:var(--muted);font-size:14px;margin-bottom:32px}
+
+  .balance-card{
+    background:linear-gradient(135deg,#16233a 0%,#0d1219 100%);
+    border:1px solid var(--border);border-radius:20px;
+    padding:32px;margin-bottom:24px;position:relative;overflow:hidden;
+  }
+  .balance-card::before{
+    content:'';position:absolute;top:-100px;right:-100px;width:300px;height:300px;
+    border-radius:50%;background:radial-gradient(circle,rgba(79,140,255,.2),transparent 70%);
+  }
+  .balance-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
+  .balance-value{font-size:48px;font-weight:900;line-height:1;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .balance-currency{font-size:20px;color:var(--muted);margin-left:6px;font-weight:600}
+  .balance-meta{display:flex;gap:32px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+  .balance-meta .item .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .balance-meta .item .v{font-size:15px;font-weight:700;margin-top:4px}
+
+  .topup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+  .topup-card{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:20px;cursor:pointer;transition:.15s;position:relative;
+  }
+  .topup-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .topup-card.selected{border-color:var(--accent);background:rgba(79,140,255,.1)}
+  .topup-card .amount{font-size:24px;font-weight:800}
+  .topup-card .price{font-size:13px;color:var(--muted);margin-top:4px}
+  .topup-card .bonus{
+    position:absolute;top:10px;right:10px;
+    background:var(--accent-2);color:#000;font-size:10px;font-weight:800;
+    padding:3px 8px;border-radius:100px;
+  }
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px}
+  .panel h2{font-size:18px;margin-bottom:16px;font-weight:700}
+
+  .pay-methods{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .pay-method{
+    flex:1;min-width:140px;padding:16px;border-radius:12px;
+    border:1px solid var(--border);background:var(--panel-2);
+    cursor:pointer;transition:.15s;text-align:center;
+  }
+  .pay-method:hover{border-color:var(--accent)}
+  .pay-method.selected{border-color:var(--accent);background:rgba(79,140,255,.1)}
+  .pay-method .icon{font-size:28px;margin-bottom:6px}
+  .pay-method .name{font-size:13px;font-weight:600}
+  .pay-method .desc{font-size:11px;color:var(--muted);margin-top:2px}
+
+  .tx-list{display:flex;flex-direction:column;gap:8px}
+  .tx-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 16px;background:var(--panel-2);border-radius:10px;
+    font-size:14px;
+  }
+  .tx-item .left{display:flex;flex-direction:column;gap:2px}
+  .tx-item .title{font-weight:600}
+  .tx-item .time{font-size:11px;color:var(--muted)}
+  .tx-item .amount{font-weight:700}
+  .tx-item .amount.plus{color:var(--accent-2)}
+  .tx-item .amount.minus{color:var(--danger)}
+
+  .empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1f2937;border:1px solid var(--border);padding:12px 24px;border-radius:10px;font-size:14px;opacity:0;transition:.3s;z-index:200}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo"><div class="dot">☁</div>t<span>Cloud</span>Phone</a>
+    <div class="nav-links">
+      <a href="index.html">Dashboard</a>
+      <a href="rent.html">Thuê máy</a>
+      <a href="wallet.html" class="active">Ví tiền</a>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <div id="navBalance" style="font-weight:700;font-size:14px;color:var(--accent-2)">$0.00</div>
+      <a href="index.html" class="btn ghost">← Về Dashboard</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <h1>💳 Ví tiền</h1>
+  <div class="subtitle">Nạp tiền để thuê cloud phone. Số dư trừ dần theo giờ khi máy đang chạy.</div>
+
+  <!-- BALANCE -->
+  <div class="balance-card">
+    <div class="balance-label">Số dư hiện tại</div>
+    <div class="balance-value" id="balanceValue">0.00<span class="balance-currency">USD</span></div>
+    <div class="balance-meta">
+      <div class="item"><div class="k">Đã nạp</div><div class="v" id="totalDeposited">$0.00</div></div>
+      <div class="item"><div class="k">Đã chi</div><div class="v" id="totalSpent">$0.00</div></div>
+      <div class="item"><div class="k">Máy đang thuê</div><div class="v" id="activeRentals">0</div></div>
+    </div>
+  </div>
+
+  <!-- TOPUP -->
+  <div class="panel">
+    <h2>💰 Nạp tiền</h2>
+    <div class="topup-grid" id="topupGrid"></div>
+
+    <h2 style="margin-top:8px">Phương thức thanh toán</h2>
+    <div class="pay-methods" id="payMethods">
+      <div class="pay-method selected" data-method="card">
+        <div class="icon">💳</div>
+        <div class="name">Thẻ tín dụng</div>
+        <div class="desc">Visa / Master</div>
+      </div>
+      <div class="pay-method" data-method="momo">
+        <div class="icon">📱</div>
+        <div class="name">Momo</div>
+        <div class="desc">Ví điện tử VN</div>
+      </div>
+      <div class="pay-method" data-method="bank">
+        <div class="icon">🏦</div>
+        <div class="name">Chuyển khoản</div>
+        <div class="desc">Ngân hàng VN</div>
+      </div>
+    </div>
+
+    <button class="btn primary" style="width:100%;padding:14px;font-size:15px" onclick="doTopup()">
+      🚀 Nạp <span id="selectedAmount">$0.00</span>
+    </button>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="panel">
+    <h2>📜 Lịch sử giao dịch</h2>
+    <div class="tx-list" id="txList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SESSION_KEY = 'tcloudphone_session';
+const WALLET_KEY = 'tcloudphone_wallet';
+
+function getSession(){
+  try{ return JSON.parse(localStorage.getItem(SESSION_KEY)); }catch{ return null; }
+}
+function getUserKey(){
+  const s = getSession();
+  return s ? 'u_' + s.email : null;
+}
+function getWallet(){
+  const key = getUserKey();
+  if(!key) return { balance:0, totalDeposited:0, totalSpent:0, transactions:[] };
+  try{
+    return JSON.parse(localStorage.getItem(WALLET_KEY + '_' + key)) || { balance:0, totalDeposited:0, totalSpent:0, transactions:[] };
+  }catch{
+    return { balance:0, totalDeposited:0, totalSpent:0, transactions:[] };
+  }
+}
+function saveWallet(w){
+  const key = getUserKey();
+  if(!key) return;
+  localStorage.setItem(WALLET_KEY + '_' + key, JSON.stringify(w));
+  window.dispatchEvent(new StorageEvent('storage', { key: WALLET_KEY + '_' + key }));
+}
+function getActiveRentals(){
+  const key = getUserKey();
+  if(!key) return 0;
+  try{
+    const rentals = JSON.parse(localStorage.getItem('tcloudphone_rentals_' + key)) || [];
+    return rentals.filter(r => r.status === 'active').length;
+  }catch{ return 0; }
+}
+
+/* RENDER */
+function render(){
+  const w = getWallet();
+  document.getElementById('balanceValue').innerHTML = w.balance.toFixed(2) + '<span class="balance-currency">USD</span>';
+  document.getElementById('navBalance').textContent = '$' + w.balance.toFixed(2);
+  document.getElementById('totalDeposited').textContent = '$' + w.totalDeposited.toFixed(2);
+  document.getElementById('totalSpent').textContent = '$' + w.totalSpent.toFixed(2);
+  document.getElementById('activeRentals').textContent = getActiveRentals();
+
+  // Transactions
+  const txList = document.getElementById('txList');
+  const txs = [...w.transactions].reverse().slice(0, 20);
+  if(txs.length === 0){
+    txList.innerHTML = '<div class="empty">Chưa có giao dịch nào</div>';
+  } else {
+    txList.innerHTML = txs.map(t => `
+      <div class="tx-item">
+        <div class="left">
+          <div class="title">${t.title}</div>
+          <div class="time">${new Date(t.time).toLocaleString('vi-VN')}</div>
+        </div>
+        <div class="amount ${t.amount >= 0 ? 'plus':'minus'}">
+          ${t.amount >= 0 ? '+':'−'}$${Math.abs(t.amount).toFixed(2)}
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+/* TOPUP */
+const TOPUP_OPTIONS = [
+  { amount:5, bonus:0 },
+  { amount:10, bonus:0 },
+  { amount:20, bonus:1 },
+  { amount:50, bonus:5 },
+  { amount:100, bonus:15 },
+  { amount:200, bonus:40 },
+];
+let selectedTopup = null;
+let selectedPayMethod = 'card';
+
+function renderTopup(){
+  const grid = document.getElementById('topupGrid');
+  grid.innerHTML = TOPUP_OPTIONS.map(o => `
+    <div class="topup-card ${selectedTopup?.amount===o.amount?'selected':''}" onclick="selectTopup(${o.amount})">
+      ${o.bonus ? `<div class="bonus">+$${o.bonus}</div>` : ''}
+      <div class="amount">$${o.amount}</div>
+      <div class="price">Nạp ${o.amount + o.bonus} credit</div>
+    </div>
+  `).join('');
+}
+function selectTopup(amount){
+  selectedTopup = TOPUP_OPTIONS.find(o => o.amount === amount);
+  document.getElementById('selectedAmount').textContent = '$' + amount.toFixed(2);
+  renderTopup();
+}
+
+document.querySelectorAll('.pay-method').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.pay-method').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedPayMethod = el.dataset.method;
+  });
+});
+
+function doTopup(){
+  if(!selectedTopup){ toast('Chọn số tiền muốn nạp'); return; }
+  const w = getWallet();
+  const total = selectedTopup.amount + (selectedTopup.bonus || 0);
+  w.balance += total;
+  w.totalDeposited += selectedTopup.amount;
+  w.transactions.push({
+    title: `Nạp tiền qua ${selectedPayMethod.toUpperCase()}${selectedTopup.bonus ? ' (+ bonus)' : ''}`,
+    amount: total,
+    time: Date.now(),
+  });
+  saveWallet(w);
+  render();
+  toast(`✅ Nạp thành công $${total.toFixed(2)}`);
+  selectedTopup = null;
+  document.getElementById('selectedAmount').textContent = '$0.00';
+  renderTopup();
+}
+
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* INIT */
+if(!getSession()) location.replace('login.html');
+renderTopup();
+render();
+</script>
+</body>
+</html>
