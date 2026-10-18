@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Đăng nhập — tCloudPhone</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>☁</text></svg>">
+<style>
+  :root{
+    --bg:#05070c; --panel:#0d1219; --panel-2:#121a26;
+    --border:#1e2836; --text:#e6edf3; --muted:#8b98a9;
+    --accent:#4f8cff; --accent-2:#22c55e; --danger:#ef4444;
+    --grad:linear-gradient(135deg,#4f8cff 0%,#22c55e 100%);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Segoe UI',system-ui,sans-serif;
+    background:var(--bg);color:var(--text);min-height:100vh;
+    display:grid;grid-template-columns:1fr 1fr;
+  }
+  a{color:inherit;text-decoration:none}
+
+  /* LEFT: FORM */
+  .auth-side{padding:40px;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh}
+  .auth-card{width:100%;max-width:400px}
+
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;margin-bottom:32px}
+  .logo .dot{width:38px;height:38px;border-radius:11px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:18px}
+  .logo span{color:var(--accent)}
+
+  h1{font-size:26px;margin-bottom:6px;font-weight:800}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:28px}
+
+  .tabs{display:flex;background:var(--panel-2);border-radius:10px;padding:4px;margin-bottom:24px;border:1px solid var(--border)}
+  .tab{flex:1;text-align:center;padding:10px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--muted);transition:.15s;font-weight:600;user-select:none}
+  .tab.active{background:var(--accent);color:#fff}
+
+  form{display:none;flex-direction:column;gap:14px}
+  form.active{display:flex}
+  label{font-size:12px;color:var(--muted);margin-bottom:4px;display:block;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .field{position:relative}
+  .field input{
+    width:100%;background:var(--panel-2);border:1px solid var(--border);
+    border-radius:10px;padding:13px 42px 13px 14px;color:var(--text);
+    outline:none;font-size:14px;transition:.15s;font-family:inherit;
+  }
+  .field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,140,255,.15)}
+  .toggle-pass{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-size:16px;user-select:none}
+
+  .btn{
+    padding:13px;border-radius:10px;border:1px solid var(--border);
+    background:var(--panel-2);color:var(--text);cursor:pointer;
+    font-size:14px;transition:.15s;font-weight:700;font-family:inherit;
+  }
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 20px rgba(79,140,255,.3)}
+  .btn.primary:hover{background:#3b7bf0}
+  .btn.primary:disabled{opacity:.5;cursor:not-allowed}
+
+  .msg{font-size:13px;padding:12px;border-radius:10px;display:none;font-weight:500}
+  .msg.show{display:block}
+  .msg.error{background:rgba(239,68,68,.1);color:#ff8a8a;border:1px solid rgba(239,68,68,.3)}
+  .msg.ok{background:rgba(34,197,94,.1);color:#7ee7a1;border:1px solid rgba(34,197,94,.3)}
+
+  .back-link{text-align:center;margin-top:24px;font-size:13px;color:var(--muted)}
+  .back-link a{color:var(--accent);font-weight:600}
+
+  /* RIGHT: VISUAL */
+  .visual-side{
+    background:linear-gradient(135deg,#0d1219 0%,#05070c 100%);
+    position:relative;overflow:hidden;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:60px;border-left:1px solid var(--border);
+  }
+  .visual-side::before{
+    content:'';position:absolute;top:-200px;right:-200px;
+    width:600px;height:600px;border-radius:50%;
+    background:radial-gradient(circle,rgba(79,140,255,.2),transparent 70%);
+  }
+  .visual-side::after{
+    content:'';position:absolute;bottom:-200px;left:-200px;
+    width:500px;height:500px;border-radius:50%;
+    background:radial-gradient(circle,rgba(34,197,94,.15),transparent 70%);
+  }
+  .visual-content{position:relative;z-index:2;max-width:480px}
+  .visual-badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 14px;border-radius:100px;
+    background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);
+    color:#7ee7a1;font-size:12px;font-weight:600;margin-bottom:20px;
+  }
+  .visual-badge .pulse{
+    width:8px;height:8px;border-radius:50%;background:var(--accent-2);
+    box-shadow:0 0 8px var(--accent-2);animation:pulse 1.5s infinite;
+  }
+  @keyframes pulse{50%{opacity:.4;transform:scale(.8)}}
+  .visual-side h2{font-size:36px;font-weight:900;line-height:1.15;margin-bottom:16px;letter-spacing:-1px}
+  .visual-side h2 .grad{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .visual-side p{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:32px}
+  .feature-list{list-style:none;display:flex;flex-direction:column;gap:16px}
+  .feature-list li{display:flex;gap:12px;align-items:flex-start;font-size:14px}
+  .feature-list .check{
+    flex-shrink:0;width:24px;height:24px;border-radius:50%;
+    background:rgba(34,197,94,.15);color:var(--accent-2);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;
+  }
+  .feature-list strong{display:block;font-weight:700;margin-bottom:2px}
+  .feature-list span{color:var(--muted);font-size:13px}
+
+  @media(max-width:900px){
+    body{grid-template-columns:1fr}
+    .visual-side{display:none}
+    .auth-side{padding:24px}
+  }
+</style>
+</head>
+<body>
+
+<!-- LEFT: FORM -->
+<div class="auth-side">
+  <div class="auth-card">
+    <a href="home.html" class="logo"><div class="dot">☁</div>t<span>Cloud</span>Phone</a>
+
+    <h1 id="pageTitle">Chào mừng trở lại</h1>
+    <p class="sub" id="pageSub">Đăng nhập để quản lý cloud phone của bạn</p>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="login" onclick="switchTab('login')">Đăng nhập</div>
+      <div class="tab" data-tab="register" onclick="switchTab('register')">Đăng ký</div>
+    </div>
+
+    <div class="msg" id="msg"></div>
+
+    <!-- LOGIN -->
+    <form id="loginForm" class="active" onsubmit="doLogin(event)">
+      <div>
+        <label>Email</label>
+        <div class="field"><input id="liEmail" type="email" placeholder="you@example.com" autocomplete="email" required /></div>
+      </div>
+      <div>
+        <label>Mật khẩu</label>
+        <div class="field">
+          <input id="liPass" type="password" placeholder="••••••••" autocomplete="current-password" required />
+          <span class="toggle-pass" onclick="togglePass('liPass', this)">👁</span>
+        </div>
+      </div>
+      <button type="submit" class="btn primary" id="liBtn">Đăng nhập</button>
+    </form>
+
+    <!-- REGISTER -->
+    <form id="registerForm" onsubmit="doRegister(event)">
+      <div>
+        <label>Họ tên</label>
+        <div class="field"><input id="rgName" placeholder="Nguyễn Văn A" required /></div>
+      </div>
+      <div>
+        <label>Email</label>
+        <div class="field"><input id="rgEmail" type="email" placeholder="you@example.com" autocomplete="email" required /></div>
+      </div>
+      <div>
+        <label>Mật khẩu (≥ 6 ký tự)</label>
+        <div class="field">
+          <input id="rgPass" type="password" placeholder="••••••••" minlength="6" autocomplete="new-password" required />
+          <span class="toggle-pass" onclick="togglePass('rgPass', this)">👁</span>
+        </div>
+      </div>
+      <div>
+        <label>Nhập lại mật khẩu</label>
+        <div class="field"><input id="rgPass2" type="password" placeholder="••••••••" minlength="6" autocomplete="new-password" required /></div>
+      </div>
+      <button type="submit" class="btn primary" id="rgBtn">Tạo tài khoản miễn phí</button>
+    </form>
+
+    <div class="back-link">← <a href="home.html">Về trang chủ</a></div>
+  </div>
+</div>
+
+<!-- RIGHT: VISUAL -->
+<div class="visual-side">
+  <div class="visual-content">
+    <div class="visual-badge">
+      <span class="pulse"></span>
+      Miễn phí 2 giờ dùng thử
+    </div>
+    <h2>Android Cloud Phone<br/><span class="grad">24/7 cày game</span></h2>
+    <p>Stream 60fps, độ trễ ~25ms. Chạy trên ARM thật, không giả lập. Đóng tab vẫn chạy tiếp.</p>
+    <ul class="feature-list">
+      <li><div class="check">✓</div><div><strong>Stream 60fps</strong><span>WebRTC, độ trễ ~25ms</span></div></li>
+      <li><div class="check">✓</div><div><strong>ARM thật, không giả lập</strong><span>Rủi ro ban cực thấp</span></div></li>
+      <li><div class="check">✓</div><div><strong>Cày 24/7</strong><span>Đóng tab, tắt máy vẫn chạy</span></div></li>
+      <li><div class="check">✓</div><div><strong>Không cần thẻ</strong><span>Hủy bất cứ lúc nào</span></div></li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const USERS_KEY = 'tcloudphone_users';
+const SESSION_KEY = 'tcloudphone_session';
+
+function getUsers(){ try{ return JSON.parse(localStorage.getItem(USERS_KEY)) || {}; }catch{ return {}; } }
+function saveUsers(u){ localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+
+function showMsg(text, type='error'){
+  const m = document.getElementById('msg');
+  m.className = 'msg show ' + type;
+  m.textContent = text;
+  if(type === 'ok') setTimeout(() => m.classList.remove('show'), 3000);
+}
+
+function togglePass(id, el){
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  el.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+  document.getElementById('registerForm').classList.toggle('active', tab === 'register');
+  document.getElementById('msg').classList.remove('show');
+
+  document.getElementById('pageTitle').textContent = tab === 'login' ? 'Chào mừng trở lại' : 'Tạo tài khoản';
+  document.getElementById('pageSub').textContent = tab === 'login'
+    ? 'Đăng nhập để quản lý cloud phone của bạn'
+    : 'Miễn phí · Không cần thẻ tín dụng';
+}
+
+async function hashPassword(password, saltHex){
+  const enc = new TextEncoder();
+  const salt = saltHex ? hexToBytes(saltHex) : crypto.getRandomValues(new Uint8Array(16));
+  const km = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name:'PBKDF2', salt, iterations:120000, hash:'SHA-256' }, km, 256
+  );
+  return { hash: bytesToHex(new Uint8Array(bits)), salt: bytesToHex(salt) };
+}
+function bytesToHex(b){ return [...b].map(x => x.toString(16).padStart(2,'0')).join(''); }
+function hexToBytes(h){
+  const arr = new Uint8Array(h.length/2);
+  for(let i=0;i<arr.length;i++) arr[i] = parseInt(h.substr(i*2,2),16);
+  return arr;
+}
+
+async function doRegister(e){
+  e.preventDefault();
+  const btn = document.getElementById('rgBtn');
+  btn.disabled = true; btn.textContent = 'Đang tạo...';
+  try{
+    const name = document.getElementById('rgName').value.trim();
+    const email = document.getElementById('rgEmail').value.trim().toLowerCase();
+    const pass = document.getElementById('rgPass').value;
+    const pass2 = document.getElementById('rgPass2').value;
+
+    if(!name) return showMsg('Vui lòng nhập họ tên');
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showMsg('Email không hợp lệ');
+    if(pass.length < 6) return showMsg('Mật khẩu phải ≥ 6 ký tự');
+    if(pass !== pass2) return showMsg('Mật khẩu nhập lại không khớp');
+
+    const users = getUsers();
+    if(users[email]) return showMsg('Email này đã được đăng ký');
+
+    const { hash, salt } = await hashPassword(pass);
+    users[email] = { name, email, hash, salt, createdAt: Date.now() };
+    saveUsers(users);
+
+    // Tặng 2 giờ dùng thử = $0.5 credit
+    const WALLET_KEY = 'tcloudphone_wallet_u_' + email;
+    localStorage.setItem(WALLET_KEY, JSON.stringify({
+      balance: 0.50,
+      totalDeposited: 0,
+      totalSpent: 0,
+      transactions: [{
+        title: '🎁 Tặng dùng thử 2 giờ',
+        amount: 0.50,
+        time: Date.now(),
+      }],
+    }));
+
+    showMsg('✅ Đăng ký thành công! Đang đăng nhập...', 'ok');
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name, at: Date.now() }));
+    setTimeout(() => location.href = 'index.html', 800);
+  } catch(err){
+    showMsg('Lỗi: ' + err.message);
+  } finally{
+    btn.disabled = false; btn.textContent = 'Tạo tài khoản miễn phí';
+  }
+}
+
+async function doLogin(e){
+  e.preventDefault();
+  const btn = document.getElementById('liBtn');
+  btn.disabled = true; btn.textContent = 'Đang đăng nhập...';
+  try{
+    const email = document.getElementById('liEmail').value.trim().toLowerCase();
+    const pass = document.getElementById('liPass').value;
+
+    const users = getUsers();
+    const user = users[email];
+    if(!user) return showMsg('Email hoặc mật khẩu không đúng');
+
+    const { hash } = await hashPassword(pass, user.salt);
+    if(hash !== user.hash) return showMsg('Email hoặc mật khẩu không đúng');
+
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ email: user.email, name: user.name, at: Date.now() }));
+    showMsg('✅ Đăng nhập thành công!', 'ok');
+    setTimeout(() => location.href = 'index.html', 500);
+  } catch(err){
+    showMsg('Lỗi: ' + err.message);
+  } finally{
+    btn.disabled = false; btn.textContent = 'Đăng nhập';
+  }
+}
+
+/* Auto-switch tab từ ?tab=register */
+(function(){
+  const params = new URLSearchParams(location.search);
+  if(params.get('tab') === 'register') switchTab('register');
+})();
+
+/* Auto-redirect nếu đã đăng nhập */
+(function(){
+  try{
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY));
+    if(s && s.email) location.href = 'index.html';
+  }catch{}
+})();
+</script>
+</body>
+</html>
