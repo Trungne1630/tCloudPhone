@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>tCloudPhone — Điều khiển Cloud Phone</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>☁</text></svg>">
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121821; --panel-2:#18202b;
+    --border:#232d3a; --text:#e6edf3; --muted:#8b98a9;
+    --accent:#4f8cff; --ok:#22c55e; --danger:#ef4444; --warn:#f59e0b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+
+  header{height:58px;display:flex;align-items:center;gap:16px;padding:0 20px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#121821,#0e141c)}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;white-space:nowrap}
+  .logo .dot{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#4f8cff,#22c55e);display:flex;align-items:center;justify-content:center;font-size:14px}
+  .logo span{color:var(--accent)}
+  .search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:8px 12px}
+  .search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px}
+  .mode-badge{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted)}
+  .mode-badge.demo{color:var(--warn);border-color:#4a3a1a;background:#2a2010}
+  .mode-badge.live{color:var(--ok);border-color:#1a4a2a;background:#0f2a1a}
+
+  .btn{padding:9px 16px;border-radius:10px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);cursor:pointer;font-size:14px;transition:.15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .btn:hover{background:#1f2937;border-color:#334155}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:#3b7bf0}
+  .btn.danger{background:transparent;border-color:#432a2a;color:#ef8f8f}
+  .btn.danger:hover{background:#3b1a1a}
+  .btn.icon{padding:9px 12px}
+
+  .app{display:grid;grid-template-columns:280px 1fr 280px;height:calc(100vh - 58px)}
+
+  .sidebar{background:var(--panel);border-right:1px solid var(--border);overflow-y:auto;padding:14px}
+  .sidebar h3{font-size:12px;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+  .device-item{padding:12px;border-radius:10px;border:1px solid transparent;cursor:pointer;margin-bottom:8px;transition:.15s;background:var(--panel-2)}
+  .device-item:hover{border-color:#334155}
+  .device-item.active{border-color:var(--accent);background:#16233a}
+  .device-item .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .device-item .name{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+  .status-dot{width:8px;height:8px;border-radius:50%}
+  .status-dot.online{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  .status-dot.offline{background:var(--danger)}
+  .status-dot.booting{background:var(--warn);animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.3}}
+  .device-item .meta{font-size:11px;color:var(--muted)}
+
+  .main{display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 50% 0%,#131c28 0%,var(--bg) 70%)}
+  .phone-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+  .phone-frame{width:340px;height:690px;background:#000;border-radius:44px;border:10px solid #1c2634;box-shadow:0 0 0 2px #0a0e13,0 30px 80px rgba(0,0,0,.7);position:relative;overflow:hidden;transition:transform .3s}
+  .phone-frame.landscape{transform:rotate(90deg) scale(.75)}
+  .screen{width:100%;height:100%;position:relative;background:linear-gradient(180deg,#1a2742,#0e1626);display:flex;flex-direction:column;overflow:hidden}
+  .status-bar{display:flex;justify-content:space-between;padding:10px 22px 4px;font-size:12px;font-weight:600;color:#fff;position:relative;z-index:2}
+  .notch{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:90px;height:20px;background:#000;border-radius:12px;z-index:3}
+  .home-apps{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding:40px 22px 10px;align-content:start}
+  .app-icon{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:.15s}
+  .app-icon:hover{transform:scale(1.08)}
+  .app-icon .ic{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,.09);backdrop-filter:blur(4px)}
+  .app-icon span{font-size:10px;color:#cfd8e3;text-align:center}
+  .nav-bar{display:flex;justify-content:space-around;align-items:center;padding:10px 0 16px;background:rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+  .nav-btn{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);cursor:pointer;font-size:18px;color:#dfe7f0;transition:.15s;user-select:none}
+  .nav-btn:hover{background:rgba(79,140,255,.35)}
+  .screen-offline{position:absolute;inset:0;background:rgba(5,8,12,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);z-index:5}
+  .screen-offline .ic{font-size:44px;opacity:.6}
+  .spinner{width:38px;height:38px;border:3px solid #223047;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .device-info-bar{display:flex;gap:16px;color:var(--muted);font-size:13px;flex-wrap:wrap;justify-content:center}
+  .device-info-bar b{color:var(--text)}
+
+  .controls{background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+  .controls h3{font-size:12px;letter-spacing:.5px;color:var(--muted);text-transform:uppercase}
+  .ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .ctrl-btn{padding:12px 8px;border-radius:10px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);cursor:pointer;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:5px;transition:.15s}
+  .ctrl-btn:hover{background:#1f2937;border-color:var(--accent)}
+  .ctrl-btn:active{transform:scale(.96)}
+  .ctrl-btn .ic{font-size:18px}
+  .console{flex:1;min-height:140px;background:#060a0f;border:1px solid var(--border);border-radius:10px;padding:10px;font-family:'Consolas',monospace;font-size:11px;color:#8ef0a8;overflow-y:auto;white-space:pre-wrap}
+  .console .cmd{color:#8ba3c7}
+  .console .err{color:#ff8a8a}
+  .inline-form{display:flex;gap:6px}
+  .inline-form input{flex:1;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);outline:none;font-size:13px}
+  .inline-form input:focus{border-color:var(--accent)}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px;width:460px;max-width:100%;max-height:90vh;overflow-y:auto}
+  .modal h2{font-size:18px;margin-bottom:6px}
+  .modal .sub{font-size:12px;color:var(--muted);margin-bottom:18px}
+  .modal label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;margin-top:12px}
+  .modal input,.modal select{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);outline:none;font-size:14px}
+  .modal input:focus,.modal select:focus{border-color:var(--accent)}
+  .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
+  .modal .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .modal .hint code{background:#060a0f;padding:1px 5px;border-radius:4px;color:#8ef0a8}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--panel-2);border-radius:10px;margin-top:12px}
+  .toggle-row .label{font-size:14px}
+  .toggle-row .desc{font-size:11px;color:var(--muted)}
+  .switch{position:relative;width:44px;height:24px;background:#2a3546;border-radius:20px;cursor:pointer;transition:.2s;flex-shrink:0}
+  .switch.on{background:var(--ok)}
+  .switch::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+  .switch.on::after{left:23px}
+
+  /* USER MENU */
+  .user-menu{position:relative;cursor:pointer;user-select:none}
+  .user-menu .avatar{
+    width:36px;height:36px;border-radius:50%;
+    background:linear-gradient(135deg,#4f8cff,#22c55e);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:14px;color:#fff;
+    border:2px solid var(--border);transition:.15s;
+  }
+  .user-menu:hover .avatar{border-color:var(--accent)}
+  .user-menu .dropdown{
+    position:absolute;right:0;top:48px;width:240px;
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;padding:8px;box-shadow:0 20px 50px rgba(0,0,0,.6);
+    display:none;z-index:100;
+  }
+  .user-menu.open .dropdown{display:block}
+  .dd-header{padding:12px;border-bottom:1px solid var(--border);margin-bottom:6px}
+  .dd-name{font-weight:600;font-size:14px}
+  .dd-email{font-size:12px;color:var(--muted);word-break:break-all;margin-top:2px}
+  .dd-item{padding:10px 12px;border-radius:8px;font-size:14px;transition:.15s;cursor:pointer}
+  .dd-item:hover{background:#3b1a1a;color:#ff8a8a}
+
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1f2937;border:1px solid var(--border);padding:12px 20px;border-radius:10px;font-size:14px;opacity:0;transition:.3s;z-index:200;max-width:90vw}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  ::-webkit-scrollbar{width:8px}
+  ::-webkit-scrollbar-thumb{background:#26313f;border-radius:4px}
+
+  @media(max-width:1100px){ .app{grid-template-columns:240px 1fr} .controls{display:none} }
+  @media(max-width:720px){ .app{grid-template-columns:1fr} .sidebar{display:none} .phone-frame{width:280px;height:570px} .search{display:none} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><div class="dot">☁</div>t<span>Cloud</span>Phone</div>
+  <div class="search">🔍 <input id="searchInput" placeholder="Tìm thiết bị..." oninput="renderDeviceList()" /></div>
+  <span class="mode-badge demo" id="modeBadge">DEMO</span>
+  <button class="btn primary" onclick="openAddModal()">＋ Thêm</button>
+  <button class="btn icon" onclick="openSettings()" title="Cài đặt">⚙</button>
+  <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)">
+    <div class="avatar" id="userAvatar">?</div>
+    <div class="dropdown" id="userDropdown">
+      <div class="dd-header">
+        <div class="dd-name" id="ddName">—</div>
+        <div class="dd-email" id="ddEmail">—</div>
+      </div>
+      <div class="dd-item" onclick="logout()">🚪 Đăng xuất</div>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+  <aside class="sidebar">
+    <h3>Thiết bị (<span id="deviceCount">0</span>)</h3>
+    <div id="deviceList"></div>
+  </aside>
+
+  <main class="main">
+    <div class="phone-wrap">
+      <div class="phone-frame" id="phoneFrame"><div class="screen" id="screen"></div></div>
+      <div class="device-info-bar" id="infoBar"></div>
+    </div>
+  </main>
+
+  <aside class="controls">
+    <h3>Điều khiển</h3>
+    <div class="ctrl-grid">
+      <button class="ctrl-btn" onclick="cmd('power')"><span class="ic">⏻</span>Nguồn</button>
+      <button class="ctrl-btn" onclick="cmd('home')"><span class="ic">🏠</span>Home</button>
+      <button class="ctrl-btn" onclick="cmd('back')"><span class="ic">◀</span>Back</button>
+      <button class="ctrl-btn" onclick="cmd('recents')"><span class="ic">▢</span>Recents</button>
+      <button class="ctrl-btn" onclick="cmd('volup')"><span class="ic">🔊</span>Vol +</button>
+      <button class="ctrl-btn" onclick="cmd('voldown')"><span class="ic">🔉</span>Vol −</button>
+      <button class="ctrl-btn" onclick="cmd('rotate')"><span class="ic">🔄</span>Xoay</button>
+      <button class="ctrl-btn" onclick="cmd('screenshot')"><span class="ic">📸</span>Chụp</button>
+    </div>
+
+    <h3>ADB Console</h3>
+    <div class="console" id="console"># tCloudPhone ready
+</div>
+    <div class="inline-form">
+      <input id="adbInput" placeholder="vd: shell pm list packages" onkeydown="if(event.key==='Enter')sendAdb()" />
+      <button class="btn" onclick="sendAdb()">Gửi</button>
+    </div>
+
+    <h3>Quản lý</h3>
+    <button class="btn" onclick="cmd('reboot')">🔁 Khởi động lại</button>
+    <button class="btn danger" onclick="removeSelected()">🗑 Xoá thiết bị</button>
+  </aside>
+</div>
+
+<!-- MODAL: Thêm thiết bị -->
+<div class="modal-bg" id="addModal">
+  <div class="modal">
+    <h2>Thêm Cloud Phone</h2>
+    <div class="sub">Tạo máy ảo mới trong tCloudPhone</div>
+    <label>Tên thiết bị</label>
+    <input id="fName" placeholder="vd: Máy 04 - Marketing" />
+    <label>Model</label>
+    <input id="fModel" placeholder="vd: Pixel 7 Pro" />
+    <label>Phiên bản Android</label>
+    <select id="fAndroid"><option>Android 14</option><option>Android 13</option><option>Android 12</option><option>Android 11</option></select>
+    <label>Độ phân giải</label>
+    <input id="fRes" placeholder="1080x2400" value="1080x2400" />
+    <label>Địa chỉ ADB (IP:PORT)</label>
+    <input id="fIp" placeholder="10.0.0.12:5555" />
+    <div class="actions">
+      <button class="btn" onclick="closeModal('addModal')">Huỷ</button>
+      <button class="btn primary" onclick="addDevice()">Tạo máy</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Cài đặt -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <h2>Cài đặt tCloudPhone</h2>
+    <div class="sub">Kết nối backend hoặc giữ chế độ Demo</div>
+
+    <div class="toggle-row">
+      <div>
+        <div class="label">Demo Mode</div>
+        <div class="desc">Mô phỏng, không cần server</div>
+      </div>
+      <div class="switch on" id="demoSwitch" onclick="toggleDemo()"></div>
+    </div>
+
+    <label>API Base URL (backend của bạn)</label>
+    <input id="fApiBase" placeholder="https://your-server.com" />
+    <div class="hint">
+      Backend Node.js của bạn (folder <code>server/</code>) chạy ở đâu thì nhập URL đó.
+      <br/>Ví dụ: <code>https://tcloudphone-api.onrender.com</code>
+      <br/>⚠️ GitHub Pages là HTTPS → backend cũng phải <b>HTTPS</b>.
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="testApi()">🔌 Test kết nối</button>
+      <button class="btn primary" onclick="saveSettings()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   AUTH GUARD — phải đặt đầu tiên
+============================================================ */
+const SESSION_KEY = 'tcloudphone_session';
+let currentUser = null;
+
+(function authGuard(){
+  try{
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY));
+    if(!s || !s.email){
+      location.replace('login.html');
+      return;
+    }
+    if(Date.now() - s.at > 7 * 24 * 3600 * 1000){
+      localStorage.removeItem(SESSION_KEY);
+      location.replace('login.html');
+      return;
+    }
+    currentUser = s;
+  } catch{
+    location.replace('login.html');
+  }
+})();
+
+function toggleUserMenu(e){
+  e.stopPropagation();
+  document.getElementById('userMenu').classList.toggle('open');
+}
+function logout(){
+  if(!confirm('Đăng xuất khỏi tCloudPhone?')) return;
+  localStorage.removeItem(SESSION_KEY);
+  location.href = 'login.html';
+}
+document.addEventListener('click', () => {
+  const m = document.getElementById('userMenu');
+  if(m) m.classList.remove('open');
+});
+
+/* ============================================================
+   CONFIG & STATE
+============================================================ */
+const CFG_KEY = 'tcloudphone_config';
+const DEV_KEY = 'tcloudphone_devices';
+
+let config = { demo: true, apiBase: '' };
+let devices = [];
+let selectedId = null;
+
+const DEMO_DEVICES = [
+  { id:'d1', name:'Máy 01 - Dev',    model:'Pixel 7 Pro', android:'Android 14', res:'1080x2400', ip:'10.0.0.11:5555', status:'online',  battery:87 },
+  { id:'d2', name:'Máy 02 - Test',   model:'Galaxy S23',  android:'Android 13', res:'1080x2340', ip:'10.0.0.12:5555', status:'online',  battery:64 },
+  { id:'d3', name:'Máy 03 - TikTok', model:'Xiaomi 13',   android:'Android 13', res:'1080x2400', ip:'10.0.0.13:5555', status:'offline', battery:12 },
+];
+
+/* ============================================================
+   STORAGE
+============================================================ */
+function loadConfig(){
+  const raw = localStorage.getItem(CFG_KEY);
+  if(raw) config = { demo:true, apiBase:'', ...JSON.parse(raw) };
+  updateModeBadge();
+}
+function saveConfig(){ localStorage.setItem(CFG_KEY, JSON.stringify(config)); updateModeBadge(); }
+
+function updateModeBadge(){
+  const b = document.getElementById('modeBadge');
+  if(config.demo || !config.apiBase){
+    b.textContent = 'DEMO';
+    b.className = 'mode-badge demo';
+  } else {
+    b.textContent = 'LIVE';
+    b.className = 'mode-badge live';
+  }
+}
+
+function loadDevices(){
+  const raw = localStorage.getItem(DEV_KEY);
+  if(raw){
+    devices = JSON.parse(raw);
+  } else {
+    devices = DEMO_DEVICES.map(d => ({...d}));
+    saveDevices();
+  }
+  selectedId = devices[0]?.id || null;
+}
+function saveDevices(){ localStorage.setItem(DEV_KEY, JSON.stringify(devices)); }
+
+/* ============================================================
+   API LAYER
+============================================================ */
+async function apiCall(path, method='GET', body=null){
+  if(config.demo || !config.apiBase){
+    return demoApi(path, method, body);
+  }
+  const token = localStorage.getItem('tcloudphone_token') || '';
+  const url = config.apiBase.replace(/\/$/, '') + path;
+  const res = await fetch(url, {
+    method,
+    headers: {
+      'Content-Type':'application/json',
+      ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if(res.status === 401){ location.href = 'login.html'; return; }
+  if(!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+async function demoApi(path, method, body){
+  await new Promise(r => setTimeout(r, 150));
+  if(path === '/api/devices' && method === 'GET') return devices;
+  if(path === '/api/devices' && method === 'POST'){
+    const d = { ...body, status:'booting', battery:100 };
+    return d;
+  }
+  if(path.endsWith('/cmd')) return { ok:true, stdout:'(demo) OK', stderr:'' };
+  if(path.endsWith('/adb')) return { ok:true, stdout:'(demo) executed', stderr:'' };
+  if(path.endsWith('/test')) return { ok:true, message:'demo mode' };
+  return { ok:true };
+}
+
+/* ============================================================
+   RENDER
+============================================================ */
+function getSelected(){ return devices.find(d => d.id === selectedId); }
+
+function renderDeviceList(){
+  const q = (document.getElementById('searchInput').value || '').toLowerCase();
+  const list = document.getElementById('deviceList');
+  const filtered = devices.filter(d =>
+    d.name.toLowerCase().includes(q) || (d.model||'').toLowerCase().includes(q)
+  );
+  document.getElementById('deviceCount').textContent = devices.length;
+
+  list.innerHTML = filtered.map(d => `
+    <div class="device-item ${d.id===selectedId?'active':''}" onclick="selectDevice('${d.id}')">
+      <div class="row">
+        <div class="name"><span class="status-dot ${d.status}"></span>${escapeHtml(d.name)}</div>
+      </div>
+      <div class="meta">${escapeHtml(d.model||'Unknown')} • ${d.android||''}</div>
+      <div class="meta">🔋 ${d.battery??'--'}% • ${escapeHtml(d.ip||'')}</div>
+    </div>
+  `).join('') || `<div class="meta" style="padding:20px;text-align:center">Không có thiết bị</div>`;
+}
+
+function renderScreen(){
+  const d = getSelected();
+  const screen = document.getElementById('screen');
+  const info = document.getElementById('infoBar');
+
+  if(!d){
+    screen.innerHTML = `<div class="screen-offline"><div class="ic">📵</div>Chưa chọn thiết bị</div>`;
+    info.innerHTML = '';
+    return;
+  }
+  info.innerHTML = `<span><b>${escapeHtml(d.name)}</b></span><span>${escapeHtml(d.model||'')}</span><span>${d.res||''}</span><span>🔋 ${d.battery??'--'}%</span>`;
+
+  if(d.status === 'offline'){
+    screen.innerHTML = `<div class="screen-offline"><div class="ic">📴</div><div>Thiết bị ngoại tuyến</div>
+      <button class="btn" onclick="cmd('power')">Khởi động</button></div>`;
+    return;
+  }
+  if(d.status === 'booting'){
+    screen.innerHTML = `<div class="screen-offline"><div class="spinner"></div><div>Đang khởi động...</div></div>`;
+    return;
+  }
+
+  const time = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  const apps = [
+    ['📞','Điện thoại'],['💬','Tin nhắn'],['📷','Camera'],['⚙️','Cài đặt'],
+    ['🎵','Nhạc'],['🗺️','Bản đồ'],['📧','Gmail'],['🌐','Chrome'],
+    ['🛒','CH Play'],['📁','Tệp'],['📺','YouTube'],['🖼️','Ảnh']
+  ];
+  screen.innerHTML = `
+    <div class="notch"></div>
+    <div class="status-bar"><span>${time}</span><span>📶 🔋 ${d.battery??'--'}%</span></div>
+    <div class="home-apps">
+      ${apps.map(([ic,nm]) => `<div class="app-icon" onclick="toast('Mở ${nm}')"><div class="ic">${ic}</div><span>${nm}</span></div>`).join('')}
+    </div>
+    <div class="nav-bar">
+      <div class="nav-btn" onclick="cmd('back')">◀</div>
+      <div class="nav-btn" onclick="cmd('home')">◉</div>
+      <div class="nav-btn" onclick="cmd('recents')">▢</div>
+    </div>`;
+}
+
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============================================================
+   ACTIONS
+============================================================ */
+function selectDevice(id){
+  selectedId = id;
+  renderDeviceList();
+  renderScreen();
+}
+
+function openAddModal(){ document.getElementById('addModal').classList.add('show'); }
+function openSettings(){
+  document.getElementById('fApiBase').value = config.apiBase || '';
+  document.getElementById('demoSwitch').classList.toggle('on', config.demo);
+  document.getElementById('settingsModal').classList.add('show');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+function toggleDemo(){
+  config.demo = !config.demo;
+  document.getElementById('demoSwitch').classList.toggle('on', config.demo);
+}
+
+async function saveSettings(){
+  config.apiBase = document.getElementById('fApiBase').value.trim();
+  saveConfig();
+  closeModal('settingsModal');
+  toast('Đã lưu cài đặt: ' + (config.demo ? 'DEMO' : 'LIVE ' + config.apiBase));
+}
+
+async function testApi(){
+  const url = document.getElementById('fApiBase').value.trim();
+  if(!url){ toast('Nhập API Base URL trước'); return; }
+  try{
+    const r = await fetch(url.replace(/\/$/,'') + '/api/health');
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    await r.json();
+    toast('✅ Kết nối OK');
+  } catch(e){
+    toast('❌ Lỗi: ' + e.message);
+  }
+}
+
+async function addDevice(){
+  const name = document.getElementById('fName').value.trim();
+  if(!name){ toast('Vui lòng nhập tên thiết bị'); return; }
+
+  const dev = {
+    id: 'd' + Date.now(),
+    name,
+    model: document.getElementById('fModel').value.trim() || 'Unknown',
+    android: document.getElementById('fAndroid').value,
+    res: document.getElementById('fRes').value.trim() || '1080x2400',
+    ip: document.getElementById('fIp').value.trim() || '127.0.0.1:5555',
+    status: 'booting',
+    battery: 100,
+  };
+
+  try{
+    await apiCall('/api/devices', 'POST', dev);
+  } catch(e){
+    toast('Lỗi API: ' + e.message);
+    return;
+  }
+
+  devices.push(dev);
+  saveDevices();
+  selectedId = dev.id;
+  renderDeviceList(); renderScreen();
+  closeModal('addModal');
+  toast('Đã tạo ' + name);
+
+  setTimeout(() => {
+    dev.status = 'online';
+    saveDevices(); renderDeviceList();
+    if(selectedId === dev.id) renderScreen();
+  }, 1800);
+}
+
+async function removeSelected(){
+  const d = getSelected();
+  if(!d) return;
+  if(!confirm('Xoá thiết bị "' + d.name + '"?')) return;
+
+  try{ await apiCall('/api/devices/' + d.id, 'DELETE'); }
+  catch(e){}
+
+  devices = devices.filter(x => x.id !== d.id);
+  saveDevices();
+  selectedId = devices[0]?.id || null;
+  renderDeviceList(); renderScreen();
+  toast('Đã xoá');
+}
+
+async function cmd(action){
+  const d = getSelected();
+  if(!d){ toast('Chưa chọn thiết bị'); return; }
+  log('adb -s ' + (d.ip||'---') + ' ' + action, 'cmd');
+
+  try{
+    if(!config.demo) await apiCall('/api/devices/' + d.id + '/cmd', 'POST', { action });
+  } catch(e){
+    log('Lỗi: ' + e.message, 'err');
+  }
+
+  switch(action){
+    case 'power':
+      if(d.status === 'offline'){
+        d.status = 'booting';
+        setTimeout(() => { d.status='online'; saveDevices(); renderDeviceList(); renderScreen(); }, 1600);
+      } else {
+        d.status = 'offline';
+      }
+      saveDevices(); renderDeviceList(); renderScreen();
+      toast('Nguồn: ' + d.status);
+      break;
+    case 'rotate':
+      document.getElementById('phoneFrame').classList.toggle('landscape');
+      toast('Xoay màn hình');
+      break;
+    case 'screenshot':
+      toast('📸 Đã chụp màn hình');
+      break;
+    case 'reboot':
+      d.status = 'booting'; renderScreen();
+      setTimeout(() => { d.status='online'; saveDevices(); renderDeviceList(); renderScreen(); toast('Đã khởi động lại'); }, 2000);
+      break;
+    default:
+      toast('Lệnh: ' + action);
+  }
+}
+
+async function sendAdb(){
+  const inp = document.getElementById('adbInput');
+  const val = inp.value.trim();
+  if(!val) return;
+  const d = getSelected();
+  log('adb -s ' + (d ? d.ip : '---') + ' ' + val, 'cmd');
+
+  try{
+    const r = await apiCall('/api/devices/' + (d?.id||'') + '/adb', 'POST', { cmd: val });
+    log(r.stdout || r.stderr || 'OK');
+  } catch(e){
+    if(val.includes('list packages')) log('package:com.android.chrome\npackage:com.google.android.youtube\n... (demo)');
+    else if(val.includes('devices')) log('List of devices attached\n' + (d?d.ip+'\tdevice':''));
+    else log('OK (demo)');
+  }
+  inp.value = '';
+}
+
+function log(text, cls=''){
+  const c = document.getElementById('console');
+  const line = document.createElement('div');
+  line.className = cls;
+  line.textContent = '> ' + text;
+  c.appendChild(line);
+  c.scrollTop = c.scrollHeight;
+}
+
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ============================================================
+   LIVE SIMULATION
+============================================================ */
+setInterval(() => {
+  let changed = false;
+  devices.forEach(d => {
+    if(d.status === 'online' && Math.random() < 0.15){
+      d.battery = Math.max(1, (d.battery ?? 100) - 1);
+      changed = true;
+    }
+  });
+  if(changed){
+    saveDevices();
+    renderDeviceList();
+    if(getSelected()?.status === 'online') renderScreen();
+  }
+}, 15000);
+
+/* ============================================================
+   INIT
+============================================================ */
+loadConfig();
+loadDevices();
+renderDeviceList();
+renderScreen();
+
+if(currentUser){
+  const initial = (currentUser.name || currentUser.email || '?').trim()[0].toUpperCase();
+  document.getElementById('userAvatar').textContent = initial;
+  document.getElementById('ddName').textContent  = currentUser.name || 'Người dùng';
+  document.getElementById('ddEmail').textContent = currentUser.email || '';
+}
+
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) m.classList.remove('show'); });
+});
+</script>
+</body>
+</html>
