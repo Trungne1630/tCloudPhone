@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>tCloudPhone — Android Cloud Phone 24/7, Stream 60fps</title>
+<meta name="description" content="Thuê Android cloud phone thật, chạy 24/7, stream qua trình duyệt 60fps ~25ms. Dùng thử 2 giờ miễn phí, không cần thẻ tín dụng." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>☁</text></svg>">
+<style>
+  :root{
+    --bg:#05070c; --panel:#0d1219; --panel-2:#121a26;
+    --border:#1e2836; --text:#e6edf3; --muted:#8b98a9;
+    --accent:#4f8cff; --accent-2:#22c55e; --warn:#f59e0b; --danger:#ef4444;
+    --grad:linear-gradient(135deg,#4f8cff 0%,#22c55e 100%);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.6;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit}
+  .container{max-width:1200px;margin:0 auto;padding:0 24px}
+
+  /* ============= NAVBAR ============= */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    background:rgba(5,7,12,.85);backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
+    transition:.3s;
+  }
+  nav.scrolled{background:rgba(5,7,12,.95)}
+  .nav-inner{
+    max-width:1200px;margin:0 auto;padding:0 24px;
+    height:68px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .logo{
+    display:flex;align-items:center;gap:10px;
+    font-weight:800;font-size:20px;
+  }
+  .logo .dot{
+    width:34px;height:34px;border-radius:10px;
+    background:var(--grad);
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+  }
+  .logo span{color:var(--accent)}
+  .nav-links{display:flex;gap:32px;align-items:center}
+  .nav-links a{
+    font-size:14px;color:var(--muted);transition:.15s;font-weight:500;
+  }
+  .nav-links a:hover{color:var(--text)}
+  .nav-actions{display:flex;gap:12px;align-items:center}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 20px;border-radius:10px;border:none;
+    font-size:14px;font-weight:600;cursor:pointer;
+    transition:.15s;text-decoration:none;
+  }
+  .btn-ghost{
+    background:transparent;color:var(--text);
+    border:1px solid var(--border);
+  }
+  .btn-ghost:hover{border-color:var(--accent);background:rgba(79,140,255,.1)}
+  .btn-primary{
+    background:var(--accent);color:#fff;
+    box-shadow:0 0 20px rgba(79,140,255,.35);
+  }
+  .btn-primary:hover{background:#3b7bf0;transform:translateY(-1px);box-shadow:0 4px 24px rgba(79,140,255,.5)}
+  .btn-large{padding:14px 28px;font-size:15px;border-radius:12px}
+
+  .mobile-toggle{display:none;background:none;border:none;color:var(--text);font-size:24px;cursor:pointer}
+
+  /* ============= HERO ============= */
+  .hero{
+    padding:140px 0 80px;position:relative;overflow:hidden;
+  }
+  .hero::before{
+    content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);
+    width:800px;height:800px;border-radius:50%;
+    background:radial-gradient(circle,rgba(79,140,255,.15) 0%,transparent 70%);
+    z-index:0;pointer-events:none;
+  }
+  .hero-grid{
+    display:grid;grid-template-columns:1.1fr .9fr;gap:60px;
+    align-items:center;position:relative;z-index:1;
+  }
+  .hero-badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 14px;border-radius:100px;
+    background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);
+    color:#7ee7a1;font-size:12px;font-weight:600;
+    margin-bottom:24px;
+  }
+  .hero-badge .pulse{
+    width:8px;height:8px;border-radius:50%;background:var(--accent-2);
+    box-shadow:0 0 8px var(--accent-2);animation:pulse 1.5s infinite;
+  }
+  @keyframes pulse{50%{opacity:.4;transform:scale(.8)}}
+  .hero h1{
+    font-size:clamp(32px,5vw,56px);line-height:1.1;font-weight:800;
+    letter-spacing:-1px;margin-bottom:20px;
+  }
+  .hero h1 .grad{
+    background:var(--grad);-webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .hero-desc{
+    font-size:17px;color:var(--muted);margin-bottom:32px;
+    max-width:520px;line-height:1.7;
+  }
+  .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:36px}
+  .hero-stats{
+    display:flex;gap:32px;flex-wrap:wrap;
+    padding-top:32px;border-top:1px solid var(--border);
+  }
+  .stat .value{font-size:26px;font-weight:800;color:var(--text)}
+  .stat .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+  /* PHONE MOCKUP */
+  .hero-visual{display:flex;justify-content:center;position:relative}
+  .phone-mockup{
+    width:280px;height:580px;position:relative;
+    animation:float 4s ease-in-out infinite;
+  }
+  @keyframes float{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-12px)}
+  }
+  .phone-screen{
+    position:absolute;inset:0;
+    background:linear-gradient(180deg,#0a1420,#05070c);
+    border-radius:44px;
+    border:10px solid #1c2634;
+    box-shadow:
+      0 0 0 2px #0a0e13,
+      0 40px 80px rgba(0,0,0,.7),
+      0 0 100px rgba(79,140,255,.2);
+    overflow:hidden;
+  }
+  .phone-notch{
+    position:absolute;top:12px;left:50%;transform:translateX(-50%);
+    width:90px;height:22px;background:#000;border-radius:14px;z-index:5;
+  }
+  .game-view{
+    position:absolute;inset:0;
+    background:linear-gradient(180deg,#1a3a5c 0%,#0a1e33 40%,#05070c 100%);
+    display:flex;flex-direction:column;
+    padding-top:44px;
+  }
+  .game-top{
+    display:flex;justify-content:space-between;padding:8px 16px;
+    font-size:10px;font-weight:700;color:#fff;
+  }
+  .game-hud{
+    margin-top:20px;padding:16px;display:flex;flex-direction:column;gap:8px;
+  }
+  .game-hud .label{
+    font-size:10px;color:#7ee7a1;text-transform:uppercase;
+    letter-spacing:1px;font-weight:700;
+  }
+  .game-hud .value{font-size:22px;font-weight:800;color:#fff}
+  .game-badge{
+    display:inline-block;padding:4px 10px;border-radius:100px;
+    background:rgba(255,59,59,.2);border:1px solid rgba(255,59,59,.5);
+    color:#ff6b6b;font-size:10px;font-weight:700;
+    align-self:flex-start;
+  }
+  .game-badge.live{background:rgba(79,140,255,.2);border-color:rgba(79,140,255,.5);color:#7eb2ff}
+
+  .stream-stats{
+    position:absolute;right:-100px;top:50px;
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;padding:12px 16px;
+    font-size:11px;display:flex;flex-direction:column;gap:6px;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+    animation:float 4s ease-in-out infinite;
+    animation-delay:.5s;
+  }
+  .stream-stats .row{display:flex;justify-content:space-between;gap:14px}
+  .stream-stats .k{color:var(--muted)}
+  .stream-stats .v{color:var(--accent-2);font-weight:700}
+
+  /* ============= SECTION HEADER ============= */
+  section{padding:100px 0;position:relative}
+  .section-head{text-align:center;margin-bottom:60px;max-width:720px;margin-left:auto;margin-right:auto}
+  .section-tag{
+    display:inline-block;padding:6px 14px;border-radius:100px;
+    background:rgba(79,140,255,.1);border:1px solid rgba(79,140,255,.3);
+    color:var(--accent);font-size:12px;font-weight:700;
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;
+  }
+  .section-title{
+    font-size:clamp(28px,4vw,42px);font-weight:800;
+    line-height:1.2;margin-bottom:16px;letter-spacing:-.5px;
+  }
+  .section-desc{font-size:16px;color:var(--muted);line-height:1.7}
+
+  /* ============= FEATURES ============= */
+  .features-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+  }
+  .feature-card{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:16px;padding:28px;transition:.2s;
+  }
+  .feature-card:hover{border-color:var(--accent);transform:translateY(-4px)}
+  .feature-icon{
+    width:48px;height:48px;border-radius:12px;
+    background:var(--grad);display:flex;align-items:center;
+    justify-content:center;font-size:22px;margin-bottom:18px;
+  }
+  .feature-card h3{font-size:17px;margin-bottom:8px;font-weight:700}
+  .feature-card p{font-size:14px;color:var(--muted);line-height:1.6}
+
+  /* ============= STEPS ============= */
+  .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+  .step-card{position:relative;padding-top:20px}
+  .step-num{
+    font-size:52px;font-weight:900;line-height:1;
+    background:var(--grad);-webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;background-clip:text;
+    margin-bottom:14px;
+  }
+  .step-card h3{font-size:20px;margin-bottom:10px;font-weight:700}
+  .step-card p{font-size:14px;color:var(--muted);line-height:1.6}
+  .step-visual{
+    margin-top:16px;padding:16px;
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;font-size:12px;
+  }
+
+  /* ============= COMPARE ============= */
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .compare-card{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:16px;padding:32px;position:relative;overflow:hidden;
+  }
+  .compare-card.good{border-color:rgba(34,197,94,.4)}
+  .compare-card.good::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:var(--accent-2);
+  }
+  .compare-card.bad::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:var(--danger);
+  }
+  .compare-head{
+    display:flex;align-items:center;gap:12px;
+    margin-bottom:20px;padding-bottom:20px;
+    border-bottom:1px solid var(--border);
+  }
+  .compare-head h3{font-size:20px;font-weight:700}
+  .compare-head .badge{
+    padding:4px 10px;border-radius:100px;font-size:11px;
+    font-weight:700;text-transform:uppercase;
+  }
+  .compare-card.good .badge{background:rgba(34,197,94,.15);color:var(--accent-2)}
+  .compare-card.bad .badge{background:rgba(239,68,68,.15);color:var(--danger)}
+  .compare-list{list-style:none;display:flex;flex-direction:column;gap:12px}
+  .compare-list li{
+    display:flex;align-items:flex-start;gap:10px;
+    font-size:14px;line-height:1.5;
+  }
+  .compare-list .icon{
+    flex-shrink:0;width:20px;height:20px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:14px;
+  }
+  .compare-list .ok{color:var(--accent-2)}
+  .compare-list .no{color:var(--danger)}
+
+  /* ============= PRICING ============= */
+  .pricing-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  .price-card{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:16px;padding:28px 24px;transition:.2s;
+    position:relative;display:flex;flex-direction:column;
+  }
+  .price-card:hover{border-color:var(--accent);transform:translateY(-4px)}
+  .price-card.featured{
+    border-color:var(--accent);
+    box-shadow:0 0 40px rgba(79,140,255,.25);
+  }
+  .price-badge{
+    position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+    background:var(--grad);padding:4px 14px;border-radius:100px;
+    font-size:11px;font-weight:800;text-transform:uppercase;
+    letter-spacing:.5px;color:#fff;white-space:nowrap;
+  }
+  .price-name{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px}
+  .price-value{font-size:38px;font-weight:800;line-height:1;margin-bottom:6px}
+  .price-value .unit{font-size:14px;color:var(--muted);font-weight:500}
+  .price-desc{font-size:13px;color:var(--muted);margin-bottom:24px;min-height:40px}
+  .price-list{list-style:none;margin-bottom:24px;flex:1}
+  .price-list li{
+    font-size:13px;color:var(--muted);padding:8px 0;
+    border-bottom:1px solid var(--border);display:flex;gap:8px;
+  }
+  .price-list li:last-child{border-bottom:none}
+  .price-list li::before{content:'✓';color:var(--accent-2);font-weight:700}
+
+  /* ============= FAQ ============= */
+  .faq-list{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  .faq-item{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;overflow:hidden;transition:.2s;
+  }
+  .faq-item.open{border-color:var(--accent)}
+  .faq-q{
+    padding:20px 24px;cursor:pointer;
+    display:flex;align-items:center;justify-content:space-between;
+    font-weight:600;font-size:15px;transition:.15s;
+    user-select:none;
+  }
+  .faq-q:hover{background:var(--panel-2)}
+  .faq-q::after{
+    content:'＋';font-size:20px;color:var(--muted);
+    transition:.3s;font-weight:300;
+  }
+  .faq-item.open .faq-q::after{transform:rotate(45deg);color:var(--accent)}
+  .faq-a{
+    max-height:0;overflow:hidden;transition:max-height .3s;
+    padding:0 24px;color:var(--muted);font-size:14px;line-height:1.7;
+  }
+  .faq-item.open .faq-a{max-height:300px;padding:0 24px 20px}
+
+  /* ============= CTA ============= */
+  .cta-section{
+    text-align:center;padding:100px 0;
+    background:linear-gradient(180deg,var(--bg),var(--panel));
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    position:relative;overflow:hidden;
+  }
+  .cta-section::before{
+    content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);
+    width:800px;height:800px;border-radius:50%;
+    background:radial-gradient(circle,rgba(79,140,255,.2) 0%,transparent 70%);
+    pointer-events:none;
+  }
+  .cta-section h2{
+    font-size:clamp(28px,4vw,42px);font-weight:800;
+    margin-bottom:16px;position:relative;letter-spacing:-.5px;
+  }
+  .cta-section p{font-size:16px;color:var(--muted);margin-bottom:32px;position:relative}
+  .cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative}
+  .cta-checks{
+    display:flex;gap:32px;justify-content:center;
+    margin-top:32px;flex-wrap:wrap;position:relative;
+  }
+  .cta-checks span{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .cta-checks span::before{content:'✓';color:var(--accent-2);font-weight:800}
+
+  /* ============= FOOTER ============= */
+  footer{
+    padding:60px 0 40px;background:var(--bg);
+    border-top:1px solid var(--border);
+  }
+  .footer-grid{
+    display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;
+    gap:40px;margin-bottom:40px;
+  }
+  .footer-brand p{font-size:13px;color:var(--muted);margin-top:12px;line-height:1.6}
+  .footer-col h4{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:16px}
+  .footer-col a{display:block;font-size:14px;color:var(--text);padding:6px 0;transition:.15s}
+  .footer-col a:hover{color:var(--accent)}
+  .footer-bottom{
+    display:flex;justify-content:space-between;align-items:center;
+    padding-top:32px;border-top:1px solid var(--border);
+    font-size:13px;color:var(--muted);flex-wrap:wrap;gap:12px;
+  }
+
+  /* ============= RESPONSIVE ============= */
+  @media(max-width:960px){
+    .hero-grid{grid-template-columns:1fr;gap:40px}
+    .hero-visual{order:-1}
+    .stream-stats{display:none}
+    .features-grid{grid-template-columns:1fr 1fr}
+    .pricing-grid{grid-template-columns:1fr 1fr}
+    .steps-grid{grid-template-columns:1fr;gap:40px}
+    .compare-grid{grid-template-columns:1fr}
+    .footer-grid{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:640px){
+    .nav-links{display:none}
+    .mobile-toggle{display:block}
+    .hero-stats{gap:20px}
+    .stat .value{font-size:22px}
+    .features-grid,.pricing-grid{grid-template-columns:1fr}
+    .footer-grid{grid-template-columns:1fr}
+    section{padding:70px 0}
+  }
+
+  /* MOBILE MENU */
+  .mobile-menu{
+    display:none;position:fixed;top:68px;left:0;right:0;
+    background:var(--panel);border-bottom:1px solid var(--border);
+    padding:20px 24px;flex-direction:column;gap:4px;z-index:99;
+  }
+  .mobile-menu.open{display:flex}
+  .mobile-menu a{
+    padding:12px;border-radius:8px;font-size:15px;
+    transition:.15s;
+  }
+  .mobile-menu a:hover{background:var(--panel-2)}
+</style>
+</head>
+<body>
+
+<!-- ============= NAV ============= -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="#" class="logo"><div class="dot">☁</div>t<span>Cloud</span>Phone</a>
+    <div class="nav-links">
+      <a href="#features">Tính năng</a>
+      <a href="#how">Cách hoạt động</a>
+      <a href="#compare">So sánh</a>
+      <a href="#pricing">Giá</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-actions">
+      <a href="login.html" class="btn btn-ghost">Đăng nhập</a>
+      <a href="login.html?tab=register" class="btn btn-primary">Dùng thử miễn phí</a>
+      <button class="mobile-toggle" onclick="toggleMenu()">☰</button>
+    </div>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features" onclick="toggleMenu()">Tính năng</a>
+  <a href="#how" onclick="toggleMenu()">Cách hoạt động</a>
+  <a href="#compare" onclick="toggleMenu()">So sánh</a>
+  <a href="#pricing" onclick="toggleMenu()">Giá</a>
+  <a href="#faq" onclick="toggleMenu()">FAQ</a>
+  <a href="login.html" onclick="toggleMenu()">Đăng nhập</a>
+</div>
+
+<!-- ============= HERO ============= -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-badge">
+          <span class="pulse"></span>
+          Đã hoạt động toàn cầu · Streaming 60fps
+        </div>
+        <h1>Android Cloud Phone<br/><span class="grad">24/7 cày game</span><br/>kể cả khi bạn ngủ</h1>
+        <p class="hero-desc">
+          Thuê Android cloud phone thật, chạy trên hạ tầng ARM của chúng tôi tại trung tâm dữ liệu.
+          Mở trình duyệt là chơi — đóng tab, gập laptop, game vẫn chạy tiếp.
+          Stream trực tiếp qua WebRTC, mượt 60fps, độ trễ ~25ms.
+        </p>
+        <div class="hero-ctas">
+          <a href="login.html?tab=register" class="btn btn-primary btn-large">🚀 Dùng thử 2 giờ miễn phí</a>
+          <a href="#how" class="btn btn-ghost btn-large">Xem cách hoạt động</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><div class="value">~25ms</div><div class="label">Độ trễ</div></div>
+          <div class="stat"><div class="value">60fps</div><div class="label">Streaming</div></div>
+          <div class="stat"><div class="value">24/7</div><div class="label">Uptime</div></div>
+          <div class="stat"><div class="value">ARM</div><div class="label">Real Hardware</div></div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="phone-mockup">
+          <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="game-view">
+              <div class="game-top">
+                <span>🏆 HEADSHOT ProGamer</span>
+                <span>📶</span>
+              </div>
+              <div class="game-hud">
+                <div class="game-badge live">● LIVE STREAM</div>
+                <div style="margin-top:12px">
+                  <div class="label">Combo</div>
+                  <div class="value" id="comboCounter">12x</div>
+                </div>
+                <div style="margin-top:16px;padding:12px;background:rgba(79,140,255,.1);border-radius:8px">
+                  <div class="label">Free Fire · Rank #1</div>
+                  <div style="font-size:12px;color:#cfd8e3;margin-top:4px">7 người đang online</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="stream-stats">
+          <div class="row"><span class="k">FPS</span><span class="v">60</span></div>
+          <div class="row"><span class="k">Ping</span><span class="v">25ms</span></div>
+          <div class="row"><span class="k">Codec</span><span class="v">H.264</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= FEATURES ============= -->
+<section id="features">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-tag">Tính năng</div>
+      <h2 class="section-title">Mọi game Android, chạy trên hạ tầng thật</h2>
+      <p class="section-desc">Gacha nặng, open-world, MMORPG idle 24/7 — tất cả chạy native, không cần cài đặt máy, không bị throttle.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Streaming 60fps</h3>
+        <p>WebRTC độ trễ thấp ~25ms. Chơi mượt như cầm máy thật trên tay.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌙</div>
+        <h3>Cày 24/7 không nghỉ</h3>
+        <p>Đóng tab, tắt máy, đi ngủ — thiết bị vẫn chạy trong data center.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>ARM thật, không phải giả lập</h3>
+        <p>Exynos 8895, RAM 6GB, Android 16. Game thấy máy thật, rủi ro ban cực thấp.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎮</div>
+        <h3>Đa tài khoản</h3>
+        <p>Thuê 1-100 thiết bị. Mỗi máy 1 tài khoản riêng, fingerprint độc lập.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <h3>Điều khiển đồng bộ</h3>
+        <p>Chọn nhiều máy, gõ 1 lần áp dụng cho tất cả. Batch thao tác cực nhanh.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Bảo mật & riêng tư</h3>
+        <p>Mỗi thiết bị cô lập hoàn toàn. Dữ liệu không chia sẻ giữa các máy.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= HOW IT WORKS ============= -->
+<section id="how" style="background:linear-gradient(180deg,var(--bg),var(--panel))">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-tag">Cách hoạt động</div>
+      <h2 class="section-title">3 bước bật máy Android cloud</h2>
+      <p class="section-desc">Bắt đầu trong vòng 1 phút. Không cần cài đặt gì, không cần thẻ tín dụng.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <h3>Chọn thiết bị</h3>
+        <p>Thuê máy ARM thật — sẵn sàng trong ~1 phút tại data center.</p>
+        <div class="step-visual">
+          <strong style="color:var(--accent-2)">✓ 6 máy sẵn sàng</strong><br/>
+          <span style="color:var(--muted)">Chọn cấu hình & thời gian thuê</span>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <h3>Mở trình duyệt</h3>
+        <p>Đăng nhập trên laptop, PC hay tablet. Màn hình stream qua WebRTC — không cần cài gì.</p>
+        <div class="step-visual">
+          <strong style="color:var(--accent-2)">✓ ~25ms qua WebRTC</strong><br/>
+          <span style="color:var(--muted)">tcloudphone.net</span>
+        </div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <h3>Chơi hoặc cày 24/7</h3>
+        <p>Farm, auto-battle, treo máy. Đóng tab — thiết bị vẫn chạy trong data center.</p>
+        <div class="step-visual">
+          <strong style="color:var(--accent-2)">✓ Chạy qua đêm</strong><br/>
+          <span style="color:var(--muted)">Không tốn pin, không nóng máy</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= COMPARE ============= -->
+<section id="compare">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-tag">So sánh</div>
+      <h2 class="section-title">Máy thật, không phải giả lập</h2>
+      <p class="section-desc">Mỗi thiết bị là một chiếc điện thoại ARM thật, đặt trong rack có tản nhiệt. Game thấy máy thật, rủi ro ban cực thấp.</p>
+    </div>
+    <div class="compare-grid">
+      <div class="compare-card good">
+        <div class="compare-head">
+          <h3>🌐 tCloudPhone</h3>
+          <span class="badge">Online</span>
+        </div>
+        <ul class="compare-list">
+          <li><span class="icon ok">✓</span> Chip ARM thật + cảm biến thật + device identity thật</li>
+          <li><span class="icon ok">✓</span> Rủi ro ban cực thấp</li>
+          <li><span class="icon ok">✓</span> Không tốn CPU/GPU máy bạn</li>
+          <li><span class="icon ok">✓</span> Không hao pin, không nóng máy</li>
+          <li><span class="icon ok">✓</span> Chạy 24/7 trong data center</li>
+          <li><span class="icon ok">✓</span> Chơi trên mọi trình duyệt</li>
+        </ul>
+      </div>
+      <div class="compare-card bad">
+        <div class="compare-head">
+          <h3>💻 Giả lập PC</h3>
+          <span class="badge">Rủi ro cao</span>
+        </div>
+        <ul class="compare-list">
+          <li><span class="icon no">✕</span> Ảo hoá x86 — fingerprint bị flag ngay</li>
+          <li><span class="icon no">✕</span> Rủi ro ban cao</li>
+          <li><span class="icon no">✕</span> Ăn CPU/GPU máy tính của bạn</li>
+          <li><span class="icon no">✕</span> Máy nóng, quạt kêu to</li>
+          <li><span class="icon no">✕</span> Tắt máy là dừng — không cày đêm được</li>
+          <li><span class="icon no">✕</span> Phải cài, phải cấu hình</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= PRICING ============= -->
+<section id="pricing" style="background:linear-gradient(180deg,var(--bg),var(--panel))">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-tag">Bảng giá</div>
+      <h2 class="section-title">Trả theo thời gian chơi</h2>
+      <p class="section-desc">Android ARM thật · Exynos 8895 · 6GB RAM · 64GB storage · Stream 1080p 60fps</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-name">Hourly</div>
+        <div class="price-value">$0.20<span class="unit">/giờ</span></div>
+        <div class="price-desc">Thử nhanh, chơi ngắn</div>
+        <ul class="price-list">
+          <li>ARM thật 6GB RAM</li>
+          <li>Stream 1080p 60fps</li>
+          <li>Hỗ trợ 24/7</li>
+        </ul>
+        <a href="login.html?tab=register" class="btn btn-ghost" style="text-align:center;justify-content:center">Chọn gói</a>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Daily</div>
+        <div class="price-value">$0.49<span class="unit">/ngày</span></div>
+        <div class="price-desc">Cày ngắn ngày</div>
+        <ul class="price-list">
+          <li>ARM thật 6GB RAM</li>
+          <li>Stream 1080p 60fps</li>
+          <li>Chạy 24/7 trong ngày</li>
+        </ul>
+        <a href="login.html?tab=register" class="btn btn-ghost" style="text-align:center;justify-content:center">Chọn gói</a>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Weekly</div>
+        <div class="price-value">$2.45<span class="unit">/tuần</span></div>
+        <div class="price-desc">Tiết kiệm 12%</div>
+        <ul class="price-list">
+          <li>ARM thật 6GB RAM</li>
+          <li>Stream 1080p 60fps</li>
+          <li>Uptime 24/7</li>
+        </ul>
+        <a href="login.html?tab=register" class="btn btn-ghost" style="text-align:center;justify-content:center">Chọn gói</a>
+      </div>
+      <div class="price-card featured">
+        <div class="price-badge">Phổ biến nhất</div>
+        <div class="price-name">30 ngày</div>
+        <div class="price-value">$9.50<span class="unit">/30 ngày</span></div>
+        <div class="price-desc">Rẻ nhất · tiết kiệm 34%</div>
+        <ul class="price-list">
+          <li>ARM thật 6GB RAM</li>
+          <li>Stream 1080p 60fps</li>
+          <li>Uptime 24/7</li>
+          <li>Hỗ trợ ưu tiên</li>
+        </ul>
+        <a href="login.html?tab=register" class="btn btn-primary" style="text-align:center;justify-content:center">Bắt đầu ngay</a>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:32px;color:var(--muted);font-size:13px">
+      Thuê 1-100 thiết bị · Gia hạn bất cứ lúc nào · Không phí ẩn
+    </div>
+  </div>
+</section>
+
+<!-- ============= FAQ ============= -->
+<section id="faq">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-tag">FAQ</div>
+      <h2 class="section-title">Câu hỏi thường gặp</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">tCloudPhone có chơi được mọi game Android không?</div>
+        <div class="faq-a">Có. Bất kỳ game Android nào chạy được trên máy thật đều chạy trên tCloudPhone. Từ game nặng như Genshin Impact đến MMORPG idle như Ragnarok Origin — vì là máy ARM thật, hiệu năng y hệt cầm máy trên tay.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Đóng trình duyệt thì game có dừng không?</div>
+        <div class="faq-a">Không. Thiết bị vẫn chạy trong data center 24/7. Khi bạn mở lại trình duyệt, màn hình stream lại và game vẫn đang chạy từ chỗ bạn rời đi.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Tôi có thể thuê nhiều máy cùng lúc không?</div>
+        <div class="faq-a">Có. Thuê từ 1 đến 100 thiết bị. Mỗi thiết bị độc lập về fingerprint, tài khoản game, IP (nếu chọn) — phù hợp chạy đa tài khoản.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Cần cấu hình máy tính mạnh không?</div>
+        <div class="faq-a">Không. Mọi xử lý diễn ra trên cloud. Bạn chỉ cần trình duyệt hiện đại (Chrome, Safari, Edge, Firefox) và kết nối Internet ổn định.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Thanh toán như thế nào?</div>
+        <div class="faq-a">Bạn có thể thuê theo giờ, ngày, tuần hoặc 30 ngày. Thanh toán qua thẻ, Momo, chuyển khoản. Không cần thẻ tín dụng khi dùng thử.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Có được hoàn tiền không?</div>
+        <div class="faq-a">Có. Nếu thiết bị gặp sự cố không khắc phục được trong 24h đầu, chúng tôi hoàn tiền đầy đủ. Hủy gói bất kỳ lúc nào, chỉ tính phí đã dùng.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= CTA ============= -->
+<section class="cta-section">
+  <div class="container">
+    <h2>Game của bạn không dừng.<br/>Điện thoại cũng vậy.</h2>
+    <p>Bật máy Android cloud trong 1 phút và bắt đầu cày.</p>
+    <div class="cta-actions">
+      <a href="login.html?tab=register" class="btn btn-primary btn-large">🚀 Dùng thử 2 giờ miễn phí</a>
+      <a href="login.html" class="btn btn-ghost btn-large">Đăng nhập</a>
+    </div>
+    <div class="cta-checks">
+      <span>2 giờ miễn phí</span>
+      <span>Không cần thẻ</span>
+      <span>Hủy bất cứ lúc nào</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============= FOOTER ============= -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#" class="logo"><div class="dot">☁</div>t<span>Cloud</span>Phone</a>
+        <p>Android cloud phone thật, chạy 24/7. Stream 60fps, độ trễ ~25ms. Dùng thử miễn phí.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Sản phẩm</h4>
+        <a href="#features">Tính năng</a>
+        <a href="#pricing">Bảng giá</a>
+        <a href="#how">Cách hoạt động</a>
+      </div>
+      <div class="footer-col">
+        <h4>Hỗ trợ</h4>
+        <a href="#faq">FAQ</a>
+        <a href="#">Liên hệ</a>
+        <a href="#">Hướng dẫn</a>
+      </div>
+      <div class="footer-col">
+        <h4>Pháp lý</h4>
+        <a href="#">Điều khoản</a>
+        <a href="#">Bảo mật</a>
+        <a href="#">Hoàn tiền</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 tCloudPhone. All rights reserved.</div>
+      <div>Made with ☁ in Vietnam</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* NAVBAR SCROLL */
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+/* MOBILE MENU */
+function toggleMenu(){
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+
+/* FAQ ACCORDION */
+function toggleFaq(el){
+  const item = el.parentElement;
+  const wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+  if(!wasOpen) item.classList.add('open');
+}
+
+/* COMBO COUNTER ANIMATION */
+setInterval(() => {
+  const el = document.getElementById('comboCounter');
+  if(!el) return;
+  const current = parseInt(el.textContent) || 0;
+  el.textContent = (current + 1) + 'x';
+  if(current >= 99) el.textContent = '1x';
+}, 800);
+
+/* SCROLL REVEAL */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.feature-card, .step-card, .compare-card, .price-card').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = 'opacity .6s ease, transform .6s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
