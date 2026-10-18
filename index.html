@@ -7,220 +7,530 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>☁</text></svg>">
 <style>
   :root{
-    --bg:#0b0f14; --panel:#121821; --panel-2:#18202b;
-    --border:#232d3a; --text:#e6edf3; --muted:#8b98a9;
-    --accent:#4f8cff; --ok:#22c55e; --danger:#ef4444; --warn:#f59e0b;
+    --bg:#080a12; --panel:#0f1320; --panel-2:#151a2b;
+    --border:#1e2436; --border-2:#2a3247;
+    --text:#e6edf3; --muted:#8b98a9;
+    --accent:#7c5cff; --accent-2:#22c55e; --accent-glow:rgba(124,92,255,.35);
+    --warn:#f59e0b; --danger:#ef4444;
+    --grad:linear-gradient(135deg,#7c5cff 0%,#4f8cff 100%);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#2a3247;border-radius:4px}
+  ::-webkit-scrollbar-track{background:transparent}
 
-  header{height:58px;display:flex;align-items:center;gap:12px;padding:0 20px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#121821,#0e141c);flex-wrap:nowrap;overflow-x:auto}
-  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;white-space:nowrap;flex-shrink:0}
-  .logo .dot{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#4f8cff,#22c55e);display:flex;align-items:center;justify-content:center;font-size:14px}
-  .logo span{color:var(--accent)}
-  .search{flex:1;max-width:320px;display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;min-width:160px}
-  .search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px;min-width:0}
-  .mode-badge{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted);flex-shrink:0}
-  .mode-badge.demo{color:var(--warn);border-color:#4a3a1a;background:#2a2010}
-  .mode-badge.live{color:var(--ok);border-color:#1a4a2a;background:#0f2a1a}
+  /* ============= LAYOUT ============= */
+  .layout{display:grid;grid-template-columns:240px 1fr;height:100vh}
 
-  .btn{padding:9px 14px;border-radius:10px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);cursor:pointer;font-size:13px;transition:.15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none;font-weight:600;flex-shrink:0}
-  .btn:hover{background:#1f2937;border-color:#334155}
-  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-  .btn.primary:hover{background:#3b7bf0}
-  .btn.danger{background:transparent;border-color:#432a2a;color:#ef8f8f}
-  .btn.danger:hover{background:#3b1a1a}
-  .btn.icon{padding:9px 12px}
-  .btn .bal{color:var(--ok);font-weight:800}
+  /* ============= SIDEBAR ============= */
+  .sidebar{
+    background:var(--panel);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .sidebar-brand{
+    padding:20px 20px 16px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:10px;
+    font-weight:800;font-size:17px;
+  }
+  .sidebar-brand .dot{
+    width:32px;height:32px;border-radius:9px;
+    background:var(--grad);display:flex;align-items:center;justify-content:center;
+    font-size:15px;box-shadow:0 0 20px var(--accent-glow);
+  }
+  .sidebar-brand span{color:var(--accent)}
 
-  .app{display:grid;grid-template-columns:280px 1fr 280px;height:calc(100vh - 58px)}
+  .sidebar-nav{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:2px}
+  .nav-group{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:14px 12px 6px;font-weight:700}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;
+    border-radius:8px;cursor:pointer;transition:.15s;
+    font-size:13px;color:var(--muted);font-weight:500;
+  }
+  .nav-item:hover{background:var(--panel-2);color:var(--text)}
+  .nav-item.active{background:rgba(124,92,255,.15);color:var(--accent);font-weight:600}
+  .nav-item .ic{width:18px;text-align:center;font-size:14px}
+  .nav-item .badge{
+    margin-left:auto;background:var(--accent);color:#fff;
+    font-size:10px;padding:2px 6px;border-radius:100px;font-weight:700;
+  }
 
-  .sidebar{background:var(--panel);border-right:1px solid var(--border);overflow-y:auto;padding:14px}
-  .sidebar h3{font-size:12px;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
-  .device-item{padding:12px;border-radius:10px;border:1px solid transparent;cursor:pointer;margin-bottom:8px;transition:.15s;background:var(--panel-2)}
-  .device-item:hover{border-color:#334155}
-  .device-item.active{border-color:var(--accent);background:#16233a}
-  .device-item .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-  .device-item .name{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
-  .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-  .status-dot.online{background:var(--ok);box-shadow:0 0 8px var(--ok)}
-  .status-dot.offline{background:var(--danger)}
-  .status-dot.booting{background:var(--warn);animation:pulse 1s infinite}
-  @keyframes pulse{50%{opacity:.3}}
-  .device-item .meta{font-size:11px;color:var(--muted)}
-  .rental-timer{color:var(--ok);font-weight:700}
+  .sidebar-user{
+    border-top:1px solid var(--border);padding:12px;
+  }
+  .user-card{
+    display:flex;align-items:center;gap:10px;padding:10px;
+    border-radius:10px;cursor:pointer;transition:.15s;
+  }
+  .user-card:hover{background:var(--panel-2)}
+  .user-card .avatar{
+    width:34px;height:34px;border-radius:50%;
+    background:var(--grad);display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:13px;flex-shrink:0;
+  }
+  .user-card .info{flex:1;min-width:0}
+  .user-card .name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .user-card .email{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .user-card .ic{font-size:14px;color:var(--muted)}
 
-  .main{display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 50% 0%,#131c28 0%,var(--bg) 70%)}
-  .phone-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
-  .phone-frame{width:340px;height:690px;background:#000;border-radius:44px;border:10px solid #1c2634;box-shadow:0 0 0 2px #0a0e13,0 30px 80px rgba(0,0,0,.7);position:relative;overflow:hidden;transition:transform .3s}
-  .phone-frame.landscape{transform:rotate(90deg) scale(.75)}
-  .screen{width:100%;height:100%;position:relative;background:linear-gradient(180deg,#1a2742,#0e1626);display:flex;flex-direction:column;overflow:hidden}
-  .status-bar{display:flex;justify-content:space-between;padding:10px 22px 4px;font-size:12px;font-weight:600;color:#fff;position:relative;z-index:2}
-  .notch{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:90px;height:20px;background:#000;border-radius:12px;z-index:3}
-  .home-apps{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding:40px 22px 10px;align-content:start}
-  .app-icon{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:.15s}
+  .user-dropdown{
+    position:absolute;bottom:76px;left:12px;right:12px;
+    background:var(--panel-2);border:1px solid var(--border);
+    border-radius:10px;padding:6px;display:none;z-index:50;
+    box-shadow:0 10px 40px rgba(0,0,0,.5);
+  }
+  .user-dropdown.open{display:block}
+  .dropdown-item{
+    padding:10px 12px;border-radius:6px;font-size:13px;
+    cursor:pointer;transition:.15s;display:flex;align-items:center;gap:8px;
+  }
+  .dropdown-item:hover{background:rgba(124,92,255,.15)}
+  .dropdown-item.danger:hover{background:rgba(239,68,68,.15);color:#ff8a8a}
+
+  /* ============= MAIN ============= */
+  .main{display:flex;flex-direction:column;overflow:hidden}
+
+  /* TOPBAR */
+  .topbar{
+    height:60px;padding:0 24px;border-bottom:1px solid var(--border);
+    background:var(--panel);display:flex;align-items:center;gap:14px;flex-shrink:0;
+  }
+  .topbar-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px}
+  .topbar-title .count{
+    background:var(--panel-2);color:var(--muted);
+    font-size:11px;padding:2px 8px;border-radius:100px;font-weight:600;
+  }
+  .topbar-spacer{flex:1}
+  .search-box{
+    display:flex;align-items:center;gap:8px;
+    background:var(--panel-2);border:1px solid var(--border);
+    border-radius:9px;padding:7px 12px;min-width:220px;max-width:300px;
+  }
+  .search-box input{
+    flex:1;background:none;border:none;outline:none;
+    color:var(--text);font-size:13px;min-width:0;
+  }
+  .search-box .ic{color:var(--muted);font-size:13px}
+
+  .btn{
+    padding:8px 14px;border-radius:9px;border:1px solid var(--border);
+    background:var(--panel-2);color:var(--text);cursor:pointer;
+    font-size:13px;font-weight:600;transition:.15s;
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .btn:hover{background:#1f2a3e;border-color:var(--border-2)}
+  .btn.primary{
+    background:var(--grad);border:none;color:#fff;
+    box-shadow:0 0 16px var(--accent-glow);
+  }
+  .btn.primary:hover{box-shadow:0 0 24px var(--accent-glow)}
+  .btn.icon{padding:8px 10px}
+  .btn .bal{color:var(--accent-2);font-weight:800}
+
+  /* HERO BANNER */
+  .hero-banner{
+    margin:16px 24px 0;padding:20px 24px;
+    background:linear-gradient(135deg,rgba(124,92,255,.15),rgba(79,140,255,.08));
+    border:1px solid rgba(124,92,255,.3);border-radius:14px;
+    display:flex;align-items:center;gap:16px;
+    position:relative;overflow:hidden;flex-shrink:0;
+  }
+  .hero-banner::before{
+    content:'';position:absolute;top:-50px;right:-50px;
+    width:200px;height:200px;border-radius:50%;
+    background:radial-gradient(circle,rgba(124,92,255,.3),transparent 70%);
+  }
+  .hero-icon{
+    width:44px;height:44px;border-radius:11px;
+    background:var(--grad);display:flex;align-items:center;justify-content:center;
+    font-size:20px;flex-shrink:0;box-shadow:0 0 20px var(--accent-glow);
+  }
+  .hero-content{flex:1;position:relative;z-index:1}
+  .hero-content h3{font-size:15px;margin-bottom:2px;font-weight:700}
+  .hero-content p{font-size:12px;color:var(--muted);line-height:1.5}
+  .hero-close{
+    background:none;border:none;color:var(--muted);cursor:pointer;
+    font-size:18px;padding:4px 8px;border-radius:6px;
+    position:relative;z-index:1;transition:.15s;
+  }
+  .hero-close:hover{background:rgba(255,255,255,.1);color:var(--text)}
+
+  /* TOOLBAR */
+  .toolbar{
+    padding:14px 24px;display:flex;align-items:center;gap:10px;
+    border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;
+  }
+  .toolbar-label{font-size:12px;color:var(--muted);font-weight:600}
+  .toolbar-spacer{flex:1}
+
+  .sync-banner{
+    display:none;align-items:center;gap:10px;padding:8px 14px;
+    background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);
+    border-radius:8px;font-size:12px;color:#7ee7a1;font-weight:600;
+  }
+  .sync-banner.show{display:flex}
+  .sync-banner .dot{
+    width:8px;height:8px;border-radius:50%;background:var(--accent-2);
+    box-shadow:0 0 8px var(--accent-2);animation:pulse 1.5s infinite;
+  }
+  @keyframes pulse{50%{opacity:.4;transform:scale(.8)}}
+
+  .size-toggle{
+    display:flex;background:var(--panel-2);
+    border:1px solid var(--border);border-radius:8px;padding:2px;
+  }
+  .size-btn{
+    padding:6px 10px;border:none;background:none;
+    color:var(--muted);cursor:pointer;font-size:12px;
+    border-radius:6px;transition:.15s;font-weight:600;
+  }
+  .size-btn.active{background:var(--accent);color:#fff}
+
+  /* PHONE GRID */
+  .phone-grid{
+    flex:1;overflow-y:auto;padding:20px 24px 24px;
+    display:grid;gap:16px;align-content:start;
+  }
+  .phone-grid.small{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+  .phone-grid.large{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+
+  /* PHONE CARD */
+  .phone-card{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:14px;overflow:hidden;transition:.2s;
+    position:relative;
+  }
+  .phone-card:hover{border-color:var(--border-2);transform:translateY(-2px)}
+  .phone-card.selected{
+    border-color:var(--accent);
+    box-shadow:0 0 0 2px rgba(124,92,255,.3),0 0 30px var(--accent-glow);
+  }
+
+  .phone-card-head{
+    padding:10px 12px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:8px;
+  }
+  .phone-card-check{
+    width:18px;height:18px;border-radius:5px;
+    border:2px solid var(--border-2);background:transparent;
+    cursor:pointer;flex-shrink:0;transition:.15s;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;color:transparent;
+  }
+  .phone-card.selected .phone-card-check{
+    background:var(--accent);border-color:var(--accent);color:#fff;
+  }
+  .phone-card-name{
+    flex:1;font-size:12px;font-weight:700;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .phone-card-status{
+    width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  }
+  .phone-card-status.online{background:var(--accent-2);box-shadow:0 0 6px var(--accent-2)}
+  .phone-card-status.offline{background:var(--danger)}
+  .phone-card-status.booting{background:var(--warn);animation:pulse 1s infinite}
+
+  /* PHONE SCREEN */
+  .phone-screen{
+    aspect-ratio:9/16;position:relative;overflow:hidden;
+    background:linear-gradient(180deg,#1a2742,#0e1626);
+    cursor:pointer;
+  }
+  .phone-grid.small .phone-screen{aspect-ratio:9/14}
+  .phone-grid.large .phone-screen{aspect-ratio:9/17}
+
+  .status-bar{
+    display:flex;justify-content:space-between;
+    padding:6px 12px 2px;font-size:9px;font-weight:600;color:#fff;
+    position:relative;z-index:2;
+  }
+  .notch{
+    position:absolute;top:4px;left:50%;transform:translateX(-50%);
+    width:50px;height:12px;background:#000;border-radius:8px;z-index:3;
+  }
+
+  .home-apps{
+    padding:24px 12px 8px;
+    display:grid;grid-template-columns:repeat(4,1fr);
+    gap:8px;align-content:start;
+  }
+  .app-icon{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    cursor:pointer;transition:.15s;
+  }
   .app-icon:hover{transform:scale(1.08)}
-  .app-icon .ic{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,.09);backdrop-filter:blur(4px)}
-  .app-icon span{font-size:10px;color:#cfd8e3;text-align:center}
-  .nav-bar{display:flex;justify-content:space-around;align-items:center;padding:10px 0 16px;background:rgba(0,0,0,.35);backdrop-filter:blur(6px)}
-  .nav-btn{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);cursor:pointer;font-size:18px;color:#dfe7f0;transition:.15s;user-select:none}
-  .nav-btn:hover{background:rgba(79,140,255,.35)}
-  .screen-offline{position:absolute;inset:0;background:rgba(5,8,12,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);z-index:5;text-align:center;padding:20px}
-  .screen-offline .ic{font-size:44px;opacity:.6}
-  .spinner{width:38px;height:38px;border:3px solid #223047;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+  .app-icon .ic{
+    width:32px;height:32px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:14px;background:rgba(255,255,255,.09);
+  }
+  .app-icon span{font-size:7px;color:#cfd8e3;text-align:center;line-height:1}
+
+  .nav-bar{
+    display:flex;justify-content:space-around;align-items:center;
+    padding:4px 0 8px;background:rgba(0,0,0,.35);
+  }
+  .nav-btn{
+    width:28px;height:28px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.07);cursor:pointer;
+    font-size:11px;color:#dfe7f0;transition:.15s;
+  }
+  .nav-btn:hover{background:rgba(124,92,255,.35)}
+
+  .screen-offline{
+    position:absolute;inset:0;background:rgba(5,8,12,.92);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:8px;color:var(--muted);z-index:5;text-align:center;padding:16px;
+    font-size:11px;
+  }
+  .screen-offline .ic{font-size:28px;opacity:.6}
+  .spinner{
+    width:24px;height:24px;border:2px solid #223047;
+    border-top-color:var(--accent);border-radius:50%;
+    animation:spin .8s linear infinite;
+  }
   @keyframes spin{to{transform:rotate(360deg)}}
-  .device-info-bar{display:flex;gap:16px;color:var(--muted);font-size:13px;flex-wrap:wrap;justify-content:center;max-width:400px}
-  .device-info-bar b{color:var(--text)}
-  .device-info-bar .timer{color:var(--ok);font-weight:700}
 
-  .controls{background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
-  .controls h3{font-size:12px;letter-spacing:.5px;color:var(--muted);text-transform:uppercase}
-  .ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .ctrl-btn{padding:12px 8px;border-radius:10px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);cursor:pointer;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:5px;transition:.15s}
-  .ctrl-btn:hover{background:#1f2937;border-color:var(--accent)}
-  .ctrl-btn:active{transform:scale(.96)}
-  .ctrl-btn .ic{font-size:18px}
-  .console{flex:1;min-height:140px;background:#060a0f;border:1px solid var(--border);border-radius:10px;padding:10px;font-family:'Consolas',monospace;font-size:11px;color:#8ef0a8;overflow-y:auto;white-space:pre-wrap}
-  .console .cmd{color:#8ba3c7}
-  .console .err{color:#ff8a8a}
-  .inline-form{display:flex;gap:6px}
-  .inline-form input{flex:1;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);outline:none;font-size:13px;min-width:0}
-  .inline-form input:focus{border-color:var(--accent)}
+  /* SYNC CLICK EFFECT */
+  .phone-screen.sync-flash::after{
+    content:'';position:absolute;inset:0;
+    background:rgba(34,197,94,.4);
+    animation:flash .3s ease-out;
+    pointer-events:none;z-index:10;
+  }
+  @keyframes flash{to{opacity:0}}
 
-  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+  /* PHONE CARD FOOTER */
+  .phone-card-foot{
+    padding:8px 12px;display:flex;align-items:center;
+    justify-content:space-between;font-size:10px;color:var(--muted);
+  }
+  .phone-card-foot .timer{color:var(--accent-2);font-weight:700}
+  .phone-card-foot .battery{display:flex;align-items:center;gap:4px}
+
+  /* FLOATING SYNC CONTROLS */
+  .sync-controls{
+    position:fixed;bottom:24px;left:50%;
+    transform:translateX(-50%) translateY(120px);
+    background:var(--panel);border:1px solid var(--accent);
+    border-radius:14px;padding:12px 20px;
+    display:flex;align-items:center;gap:14px;
+    box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 30px var(--accent-glow);
+    transition:.3s;z-index:90;
+  }
+  .sync-controls.show{transform:translateX(-50%) translateY(0)}
+  .sync-count{
+    display:flex;align-items:center;gap:8px;
+    padding-right:14px;border-right:1px solid var(--border);
+  }
+  .sync-count .num{
+    font-size:20px;font-weight:900;color:var(--accent);
+    min-width:28px;text-align:center;
+  }
+  .sync-count .label{font-size:11px;color:var(--muted);font-weight:600}
+  .sync-controls .btn{padding:8px 14px;font-size:12px}
+  .sync-controls .btn.danger{
+    background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.4);color:#ff8a8a;
+  }
+
+  /* MODAL */
+  .modal-bg{
+    position:fixed;inset:0;background:rgba(0,0,0,.7);
+    backdrop-filter:blur(4px);display:none;
+    align-items:center;justify-content:center;z-index:100;padding:16px;
+  }
   .modal-bg.show{display:flex}
-  .modal{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px;width:460px;max-width:100%;max-height:90vh;overflow-y:auto}
-  .modal h2{font-size:18px;margin-bottom:6px}
+  .modal{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:16px;padding:24px;width:440px;max-width:100%;
+    max-height:90vh;overflow-y:auto;
+  }
+  .modal h2{font-size:17px;margin-bottom:6px}
   .modal .sub{font-size:12px;color:var(--muted);margin-bottom:18px}
-  .modal label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;margin-top:12px}
-  .modal input,.modal select{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);outline:none;font-size:14px}
+  .modal label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;margin-top:14px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .modal input,.modal select{
+    width:100%;background:var(--panel-2);border:1px solid var(--border);
+    border-radius:8px;padding:10px 12px;color:var(--text);
+    outline:none;font-size:13px;
+  }
   .modal input:focus,.modal select:focus{border-color:var(--accent)}
-  .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
-  .modal .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
-  .modal .hint code{background:#060a0f;padding:1px 5px;border-radius:4px;color:#8ef0a8}
-  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--panel-2);border-radius:10px;margin-top:12px}
-  .toggle-row .label{font-size:14px}
-  .toggle-row .desc{font-size:11px;color:var(--muted)}
-  .switch{position:relative;width:44px;height:24px;background:#2a3546;border-radius:20px;cursor:pointer;transition:.2s;flex-shrink:0}
-  .switch.on{background:var(--ok)}
-  .switch::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
-  .switch.on::after{left:23px}
+  .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}
 
-  .user-menu{position:relative;cursor:pointer;user-select:none;flex-shrink:0}
-  .user-menu .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4f8cff,#22c55e);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;border:2px solid var(--border);transition:.15s}
-  .user-menu:hover .avatar{border-color:var(--accent)}
-  .user-menu .dropdown{position:absolute;right:0;top:48px;width:240px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:8px;box-shadow:0 20px 50px rgba(0,0,0,.6);display:none;z-index:100}
-  .user-menu.open .dropdown{display:block}
-  .dd-header{padding:12px;border-bottom:1px solid var(--border);margin-bottom:6px}
-  .dd-name{font-weight:600;font-size:14px}
-  .dd-email{font-size:12px;color:var(--muted);word-break:break-all;margin-top:2px}
-  .dd-item{padding:10px 12px;border-radius:8px;font-size:14px;transition:.15s;cursor:pointer}
-  .dd-item:hover{background:#3b1a1a;color:#ff8a8a}
-
-  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1f2937;border:1px solid var(--border);padding:12px 20px;border-radius:10px;font-size:14px;opacity:0;transition:.3s;z-index:200;max-width:90vw}
+  /* TOAST */
+  #toast{
+    position:fixed;bottom:24px;left:50%;
+    transform:translateX(-50%) translateY(120px);
+    background:var(--panel-2);border:1px solid var(--border-2);
+    padding:12px 20px;border-radius:10px;font-size:13px;
+    opacity:0;transition:.3s;z-index:200;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);font-weight:600;
+  }
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  ::-webkit-scrollbar{width:8px}
-  ::-webkit-scrollbar-thumb{background:#26313f;border-radius:4px}
 
-  @media(max-width:1100px){ .app{grid-template-columns:240px 1fr} .controls{display:none} }
-  @media(max-width:720px){ .app{grid-template-columns:1fr} .sidebar{display:none} .phone-frame{width:280px;height:570px} .search{display:none} }
+  /* EMPTY STATE */
+  .empty-state{
+    text-align:center;padding:80px 20px;color:var(--muted);
+    grid-column:1/-1;
+  }
+  .empty-state .ic{font-size:64px;opacity:.3;margin-bottom:16px}
+  .empty-state h3{font-size:16px;color:var(--text);margin-bottom:6px}
+  .empty-state p{font-size:13px;margin-bottom:20px}
+
+  /* RESPONSIVE */
+  @media(max-width:900px){
+    .layout{grid-template-columns:1fr}
+    .sidebar{display:none}
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <a href="home.html" class="logo"><div class="dot">☁</div>t<span>Cloud</span>Phone</a>
-  <div class="search">🔍 <input id="searchInput" placeholder="Tìm thiết bị..." oninput="renderDeviceList()" /></div>
-  <span class="mode-badge demo" id="modeBadge">DEMO</span>
-  <a href="rent.html" class="btn primary">＋ Thuê máy</a>
-  <a href="wallet.html" class="btn">💳 <span class="bal" id="headerBalance">$0.00</span></a>
-  <button class="btn icon" onclick="openSettings()" title="Cài đặt">⚙</button>
-  <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)">
-    <div class="avatar" id="userAvatar">?</div>
-    <div class="dropdown" id="userDropdown">
-      <div class="dd-header">
-        <div class="dd-name" id="ddName">—</div>
-        <div class="dd-email" id="ddEmail">—</div>
-      </div>
-      <div class="dd-item" onclick="logout()">🚪 Đăng xuất</div>
-    </div>
-  </div>
-</header>
-
-<div class="app">
+<div class="layout">
+  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <h3>Thiết bị (<span id="deviceCount">0</span>)</h3>
-    <div id="deviceList"></div>
+    <a href="home.html" class="sidebar-brand">
+      <div class="dot">☁</div>t<span>Cloud</span>Phone
+    </a>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group">Chính</div>
+      <div class="nav-item active" onclick="scrollTop()">
+        <span class="ic">🖥️</span>Dashboard
+      </div>
+      <a href="rent.html" class="nav-item">
+        <span class="ic">＋</span>Thuê máy
+      </a>
+      <a href="wallet.html" class="nav-item">
+        <span class="ic">💳</span>Ví tiền
+      </a>
+
+      <div class="nav-group">Công cụ</div>
+      <div class="nav-item" onclick="toast('Sắp có')">
+        <span class="ic">📦</span>Cài APK
+        <span class="badge">Soon</span>
+      </div>
+      <div class="nav-item" onclick="toast('Sắp có')">
+        <span class="ic">🖱️</span>Sync Control
+      </div>
+      <div class="nav-item" onclick="openSettings()">
+        <span class="ic">⚙️</span>Cài đặt
+      </div>
+
+      <div class="nav-group">Tài khoản</div>
+      <div class="nav-item" onclick="toast('Sắp có')">
+        <span class="ic">👤</span>Hồ sơ
+      </div>
+      <div class="nav-item" onclick="logout()">
+        <span class="ic">🚪</span>Đăng xuất
+      </div>
+    </nav>
+
+    <div class="sidebar-user" style="position:relative">
+      <div class="user-card" onclick="toggleUserMenu(event)">
+        <div class="avatar" id="userAvatar">?</div>
+        <div class="info">
+          <div class="name" id="ddName">—</div>
+          <div class="email" id="ddEmail">—</div>
+        </div>
+        <div class="ic">⋯</div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="dropdown-item" onclick="openSettings()">⚙️ Cài đặt</div>
+        <div class="dropdown-item" onclick="logout()" style="color:#ff8a8a">🚪 Đăng xuất</div>
+      </div>
+    </div>
   </aside>
 
+  <!-- MAIN -->
   <main class="main">
-    <div class="phone-wrap">
-      <div class="phone-frame" id="phoneFrame"><div class="screen" id="screen"></div></div>
-      <div class="device-info-bar" id="infoBar"></div>
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-title">
+        🖥️ Dashboard
+        <span class="count" id="topCount">0 máy</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="search-box">
+        <span class="ic">🔍</span>
+        <input id="searchInput" placeholder="Tìm thiết bị..." oninput="render()" />
+      </div>
+      <span class="mode-badge" id="modeBadge" style="font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--warn)">DEMO</span>
+      <a href="wallet.html" class="btn">💳 <span class="bal" id="headerBalance">$0.00</span></a>
+      <a href="rent.html" class="btn primary">＋ Thuê máy</a>
     </div>
+
+    <!-- HERO BANNER -->
+    <div class="hero-banner" id="heroBanner">
+      <div class="hero-icon">⚡</div>
+      <div class="hero-content">
+        <h3>Sync Control: một thao tác, cả đội hình theo</h3>
+        <p>Chọn nhiều máy, chạm/gõ trên 1 máy — tất cả máy được chọn đều lặp lại cùng lúc. Chạy nhiều tài khoản game hoặc MXH mà không cần click từng máy.</p>
+      </div>
+      <button class="hero-close" onclick="closeHero()">✕</button>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <span class="toolbar-label">Điều khiển:</span>
+      <button class="btn icon" onclick="cmdFleet('power')" title="Nguồn">⏻</button>
+      <button class="btn icon" onclick="cmdFleet('home')" title="Home">🏠</button>
+      <button class="btn icon" onclick="cmdFleet('back')" title="Back">◀</button>
+      <button class="btn icon" onclick="cmdFleet('recents')" title="Recents">▢</button>
+      <button class="btn icon" onclick="cmdFleet('volup')" title="Vol +">🔊</button>
+      <button class="btn icon" onclick="cmdFleet('voldown')" title="Vol -">🔉</button>
+      <button class="btn icon" onclick="cmdFleet('screenshot')" title="Chụp">📸</button>
+
+      <div class="sync-banner" id="syncBanner">
+        <span class="dot"></span>
+        <span id="syncText">Sync đang bật</span>
+      </div>
+
+      <div class="toolbar-spacer"></div>
+
+      <button class="btn" onclick="selectAll()" id="selectAllBtn">☑️ Chọn tất cả</button>
+      <div class="size-toggle">
+        <button class="size-btn" onclick="setSize('small')" id="sizeSmall">Nhỏ</button>
+        <button class="size-btn active" onclick="setSize('large')" id="sizeLarge">Lớn</button>
+      </div>
+    </div>
+
+    <!-- PHONE GRID -->
+    <div class="phone-grid large" id="phoneGrid"></div>
   </main>
-
-  <aside class="controls">
-    <h3>Điều khiển</h3>
-    <div class="ctrl-grid">
-      <button class="ctrl-btn" onclick="cmd('power')"><span class="ic">⏻</span>Nguồn</button>
-      <button class="ctrl-btn" onclick="cmd('home')"><span class="ic">🏠</span>Home</button>
-      <button class="ctrl-btn" onclick="cmd('back')"><span class="ic">◀</span>Back</button>
-      <button class="ctrl-btn" onclick="cmd('recents')"><span class="ic">▢</span>Recents</button>
-      <button class="ctrl-btn" onclick="cmd('volup')"><span class="ic">🔊</span>Vol +</button>
-      <button class="ctrl-btn" onclick="cmd('voldown')"><span class="ic">🔉</span>Vol −</button>
-      <button class="ctrl-btn" onclick="cmd('rotate')"><span class="ic">🔄</span>Xoay</button>
-      <button class="ctrl-btn" onclick="cmd('screenshot')"><span class="ic">📸</span>Chụp</button>
-    </div>
-
-    <h3>ADB Console</h3>
-    <div class="console" id="console"># tCloudPhone ready
-</div>
-    <div class="inline-form">
-      <input id="adbInput" placeholder="vd: shell pm list packages" onkeydown="if(event.key==='Enter')sendAdb()" />
-      <button class="btn" onclick="sendAdb()">Gửi</button>
-    </div>
-
-    <h3>Quản lý</h3>
-    <button class="btn" onclick="cmd('reboot')">🔁 Khởi động lại</button>
-    <button class="btn danger" onclick="removeSelected()">🗑 Xoá thiết bị</button>
-  </aside>
 </div>
 
-<div class="modal-bg" id="addModal">
-  <div class="modal">
-    <h2>Thêm Cloud Phone</h2>
-    <div class="sub">Tạo máy ảo mới trong tCloudPhone</div>
-    <label>Tên thiết bị</label>
-    <input id="fName" placeholder="vd: Máy 04 - Marketing" />
-    <label>Model</label>
-    <input id="fModel" placeholder="vd: Pixel 7 Pro" />
-    <label>Phiên bản Android</label>
-    <select id="fAndroid"><option>Android 14</option><option>Android 13</option><option>Android 12</option><option>Android 11</option></select>
-    <label>Độ phân giải</label>
-    <input id="fRes" placeholder="1080x2400" value="1080x2400" />
-    <label>Địa chỉ ADB (IP:PORT)</label>
-    <input id="fIp" placeholder="10.0.0.12:5555" />
-    <div class="actions">
-      <button class="btn" onclick="closeModal('addModal')">Huỷ</button>
-      <button class="btn primary" onclick="addDevice()">Tạo máy</button>
-    </div>
+<!-- FLOATING SYNC CONTROLS -->
+<div class="sync-controls" id="syncControls">
+  <div class="sync-count">
+    <div class="num" id="syncCount">0</div>
+    <div class="label">máy<br/>đã chọn</div>
   </div>
+  <button class="btn" onclick="clearSelection()">Bỏ chọn</button>
+  <button class="btn primary" onclick="syncToggle()" id="syncToggleBtn">⚡ Sync ON</button>
 </div>
 
+<!-- MODAL: Settings -->
 <div class="modal-bg" id="settingsModal">
   <div class="modal">
     <h2>Cài đặt tCloudPhone</h2>
     <div class="sub">Kết nối backend hoặc giữ chế độ Demo</div>
-    <div class="toggle-row">
-      <div><div class="label">Demo Mode</div><div class="desc">Mô phỏng, không cần server</div></div>
-      <div class="switch on" id="demoSwitch" onclick="toggleDemo()"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--panel-2);border-radius:10px;margin-top:12px">
+      <div>
+        <div style="font-size:13px;font-weight:600">Demo Mode</div>
+        <div style="font-size:11px;color:var(--muted)">Mô phỏng, không cần server</div>
+      </div>
+      <div id="demoSwitch" onclick="toggleDemo()" style="width:44px;height:24px;background:var(--accent-2);border-radius:20px;cursor:pointer;position:relative;transition:.2s">
+        <div style="position:absolute;top:3px;left:23px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s"></div>
+      </div>
     </div>
-    <label>API Base URL (backend của bạn)</label>
+    <label>API Base URL</label>
     <input id="fApiBase" placeholder="https://your-server.com" />
-    <div class="hint">Backend Node.js (folder <code>server/</code>). Ví dụ: <code>https://tcloudphone-api.onrender.com</code></div>
     <div class="actions">
-      <button class="btn" onclick="testApi()">🔌 Test</button>
+      <button class="btn" onclick="closeModal('settingsModal')">Huỷ</button>
       <button class="btn primary" onclick="saveSettings()">Lưu</button>
     </div>
   </div>
@@ -246,13 +556,11 @@ let currentUser = null;
   } catch{ location.replace('login.html'); }
 })();
 
-function getUserSuffix(){
-  return currentUser ? '_u_' + currentUser.email : '';
-}
+function getUserSuffix(){ return currentUser ? '_u_' + currentUser.email : ''; }
 
 function toggleUserMenu(e){
   e.stopPropagation();
-  document.getElementById('userMenu').classList.toggle('open');
+  document.getElementById('userDropdown').classList.toggle('open');
 }
 function logout(){
   if(!confirm('Đăng xuất khỏi tCloudPhone?')) return;
@@ -260,12 +568,12 @@ function logout(){
   location.href = 'login.html';
 }
 document.addEventListener('click', () => {
-  const m = document.getElementById('userMenu');
-  if(m) m.classList.remove('open');
+  const d = document.getElementById('userDropdown');
+  if(d) d.classList.remove('open');
 });
 
 /* ============================================================
-   CONFIG & STATE
+   STATE
 ============================================================ */
 const CFG_KEY = 'tcloudphone_config' + getUserSuffix();
 const DEV_KEY = 'tcloudphone_devices' + getUserSuffix();
@@ -274,11 +582,14 @@ const WALLET_KEY = 'tcloudphone_wallet' + getUserSuffix();
 
 let config = { demo: true, apiBase: '' };
 let devices = [];
-let selectedId = null;
+let selectedIds = new Set();  // multi-select
+let syncMode = false;         // Sync control on/off
+let gridSize = localStorage.getItem('tcloudphone_gridSize') || 'large';
 
 const DEMO_DEVICES = [
-  { id:'d1', name:'Máy 01 - Dev',    model:'Exynos 8895 · 6GB RAM', android:'Android 14', res:'1080x2400', ip:'10.0.0.11:5555', status:'online',  battery:87 },
-  { id:'d2', name:'Máy 02 - Test',   model:'Exynos 8895 · 6GB RAM', android:'Android 14', res:'1080x2400', ip:'10.0.0.12:5555', status:'online',  battery:64 },
+  { id:'d1', name:'Máy 01', model:'Exynos 8895', android:'A14', res:'1080x2400', ip:'10.0.0.11:5555', status:'online',  battery:87 },
+  { id:'d2', name:'Máy 02', model:'Exynos 8895', android:'A14', res:'1080x2400', ip:'10.0.0.12:5555', status:'online',  battery:64 },
+  { id:'d3', name:'Máy 03', model:'Exynos 8895', android:'A14', res:'1080x2400', ip:'10.0.0.13:5555', status:'offline', battery:12 },
 ];
 
 /* ============================================================
@@ -290,31 +601,23 @@ function loadConfig(){
   updateModeBadge();
 }
 function saveConfig(){ localStorage.setItem(CFG_KEY, JSON.stringify(config)); updateModeBadge(); }
-
 function updateModeBadge(){
   const b = document.getElementById('modeBadge');
-  if(config.demo || !config.apiBase){ b.textContent='DEMO'; b.className='mode-badge demo'; }
-  else { b.textContent='LIVE'; b.className='mode-badge live'; }
+  if(!b) return;
+  if(config.demo || !config.apiBase){ b.textContent='DEMO'; b.style.color='var(--warn)'; b.style.borderColor='#4a3a1a'; b.style.background='#2a2010'; }
+  else { b.textContent='LIVE'; b.style.color='var(--accent-2)'; b.style.borderColor='#1a4a2a'; b.style.background='#0f2a1a'; }
 }
 
 function loadDevices(){
   const raw = localStorage.getItem(DEV_KEY);
   if(raw){ devices = JSON.parse(raw); }
   else { devices = DEMO_DEVICES.map(d=>({...d})); saveDevices(); }
-  selectedId = devices[0]?.id || null;
 }
 function saveDevices(){ localStorage.setItem(DEV_KEY, JSON.stringify(devices)); }
 
-function getRentals(){
-  try{ return JSON.parse(localStorage.getItem(RENT_KEY)) || []; }catch{ return []; }
-}
+function getRentals(){ try{ return JSON.parse(localStorage.getItem(RENT_KEY)) || []; }catch{ return []; } }
 function saveRentals(r){ localStorage.setItem(RENT_KEY, JSON.stringify(r)); }
-
-function getWallet(){
-  try{ return JSON.parse(localStorage.getItem(WALLET_KEY)) || { balance:0 }; }
-  catch{ return { balance:0 }; }
-}
-
+function getWallet(){ try{ return JSON.parse(localStorage.getItem(WALLET_KEY)) || { balance:0 }; }catch{ return { balance:0 }; } }
 function updateHeaderBalance(){
   const w = getWallet();
   const el = document.getElementById('headerBalance');
@@ -322,114 +625,95 @@ function updateHeaderBalance(){
 }
 
 /* ============================================================
-   API LAYER
-============================================================ */
-async function apiCall(path, method='GET', body=null){
-  if(config.demo || !config.apiBase) return demoApi(path, method, body);
-  const token = localStorage.getItem('tcloudphone_token') || '';
-  const res = await fetch(config.apiBase.replace(/\/$/,'') + path, {
-    method,
-    headers: { 'Content-Type':'application/json', ...(token ? { 'Authorization':'Bearer '+token } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if(res.status === 401){ location.href = 'login.html'; return; }
-  if(!res.ok) throw new Error(`API ${res.status}`);
-  return res.json();
-}
-async function demoApi(path, method, body){
-  await new Promise(r => setTimeout(r, 150));
-  if(path === '/api/devices' && method === 'GET') return devices;
-  if(path === '/api/devices' && method === 'POST') return { ...body, status:'booting', battery:100 };
-  return { ok:true, stdout:'(demo) OK', stderr:'' };
-}
-
-/* ============================================================
    RENDER
 ============================================================ */
-function getSelected(){ return devices.find(d => d.id === selectedId); }
-
 function formatRemaining(endAt){
   const remain = endAt - Date.now();
   if(remain <= 0) return 'Hết hạn';
   const d = Math.floor(remain / 86400000);
   const h = Math.floor((remain % 86400000) / 3600000);
   const m = Math.floor((remain % 3600000) / 60000);
-  const s = Math.floor((remain % 60000) / 1000);
   if(d > 0) return `${d}d ${h}h`;
   if(h > 0) return `${h}h ${m}m`;
-  if(m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
+  return `${m}m`;
 }
 
 function getRentalForDevice(deviceId){
   return getRentals().find(r => r.id === deviceId && r.status === 'active');
 }
 
-function renderDeviceList(){
+function render(){
   const q = (document.getElementById('searchInput').value || '').toLowerCase();
-  const list = document.getElementById('deviceList');
+  const grid = document.getElementById('phoneGrid');
   const filtered = devices.filter(d =>
     d.name.toLowerCase().includes(q) || (d.model||'').toLowerCase().includes(q)
   );
-  document.getElementById('deviceCount').textContent = devices.length;
 
-  list.innerHTML = filtered.map(d => {
-    const rental = getRentalForDevice(d.id);
-    const timerHtml = rental ? `<span class="rental-timer">⏱ ${formatRemaining(rental.endAt)}</span>` : '';
-    return `
-      <div class="device-item ${d.id===selectedId?'active':''}" onclick="selectDevice('${d.id}')">
-        <div class="row">
-          <div class="name"><span class="status-dot ${d.status}"></span>${escapeHtml(d.name)}</div>
-        </div>
-        <div class="meta">${escapeHtml(d.model||'Unknown')} • ${d.android||''}</div>
-        <div class="meta">🔋 ${d.battery??'--'}% ${timerHtml}</div>
-      </div>
-    `;
-  }).join('') || `<div class="meta" style="padding:20px;text-align:center">Chưa có thiết bị. <a href="rent.html" style="color:var(--accent)">Thuê ngay</a></div>`;
-}
+  document.getElementById('topCount').textContent = devices.length + ' máy';
 
-function renderScreen(){
-  const d = getSelected();
-  const screen = document.getElementById('screen');
-  const info = document.getElementById('infoBar');
-
-  if(!d){
-    screen.innerHTML = `<div class="screen-offline"><div class="ic">📵</div>Chưa chọn thiết bị<br/><a href="rent.html" style="color:var(--accent);text-decoration:underline;margin-top:8px;display:inline-block">Thuê máy mới</a></div>`;
-    info.innerHTML = '';
-    return;
-  }
-
-  const rental = getRentalForDevice(d.id);
-  const timerInfo = rental ? `<span class="timer">⏱ ${formatRemaining(rental.endAt)}</span>` : '';
-  info.innerHTML = `<span><b>${escapeHtml(d.name)}</b></span><span>${escapeHtml(d.model||'')}</span><span>${d.res||''}</span><span>🔋 ${d.battery??'--'}%</span>${timerInfo}`;
-
-  if(d.status === 'offline'){
-    screen.innerHTML = `<div class="screen-offline"><div class="ic">📴</div><div>Thiết bị ngoại tuyến</div>
-      <button class="btn" onclick="cmd('power')">Khởi động</button></div>`;
-    return;
-  }
-  if(d.status === 'booting'){
-    screen.innerHTML = `<div class="screen-offline"><div class="spinner"></div><div>Đang khởi động...</div></div>`;
+  if(filtered.length === 0){
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="ic">📱</div>
+        <h3>Chưa có thiết bị nào</h3>
+        <p>Thuê cloud phone để bắt đầu cày game 24/7</p>
+        <a href="rent.html" class="btn primary">＋ Thuê máy ngay</a>
+      </div>`;
+    updateSyncUI();
     return;
   }
 
   const time = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
   const apps = [
-    ['📞','Điện thoại'],['💬','Tin nhắn'],['📷','Camera'],['⚙️','Cài đặt'],
-    ['🎵','Nhạc'],['🗺️','Bản đồ'],['📧','Gmail'],['🌐','Chrome'],
-    ['🛒','CH Play'],['📁','Tệp'],['📺','YouTube'],['🖼️','Ảnh']
+    ['📞','Phone'],['💬','SMS'],['📷','Camera'],['⚙️','Settings'],
+    ['🎵','Music'],['🗺️','Maps'],['📧','Gmail'],['🌐','Chrome'],
+    ['🛒','Play'],['📁','Files'],['📺','YouTube'],['🖼️','Photos']
   ];
-  screen.innerHTML = `
-    <div class="notch"></div>
-    <div class="status-bar"><span>${time}</span><span>📶 🔋 ${d.battery??'--'}%</span></div>
-    <div class="home-apps">
-      ${apps.map(([ic,nm]) => `<div class="app-icon" onclick="toast('Mở ${nm}')"><div class="ic">${ic}</div><span>${nm}</span></div>`).join('')}
-    </div>
-    <div class="nav-bar">
-      <div class="nav-btn" onclick="cmd('back')">◀</div>
-      <div class="nav-btn" onclick="cmd('home')">◉</div>
-      <div class="nav-btn" onclick="cmd('recents')">▢</div>
-    </div>`;
+
+  grid.innerHTML = filtered.map(d => {
+    const selected = selectedIds.has(d.id);
+    const rental = getRentalForDevice(d.id);
+    const timer = rental ? `<span class="timer">⏱ ${formatRemaining(rental.endAt)}</span>` : '';
+
+    let screenContent;
+    if(d.status === 'offline'){
+      screenContent = `<div class="screen-offline"><div class="ic">📴</div><div>Ngoại tuyến</div></div>`;
+    } else if(d.status === 'booting'){
+      screenContent = `<div class="screen-offline"><div class="spinner"></div><div>Đang khởi động...</div></div>`;
+    } else {
+      screenContent = `
+        <div class="notch"></div>
+        <div class="status-bar"><span>${time}</span><span>📶 🔋 ${d.battery??'--'}%</span></div>
+        <div class="home-apps">
+          ${apps.map(([ic,nm]) => `<div class="app-icon"><div class="ic">${ic}</div><span>${nm}</span></div>`).join('')}
+        </div>
+        <div class="nav-bar">
+          <div class="nav-btn">◀</div>
+          <div class="nav-btn">◉</div>
+          <div class="nav-btn">▢</div>
+        </div>`;
+    }
+
+    return `
+      <div class="phone-card ${selected?'selected':''}" data-id="${d.id}">
+        <div class="phone-card-head">
+          <div class="phone-card-check" onclick="toggleSelect('${d.id}', event)">✓</div>
+          <div class="phone-card-name">${escapeHtml(d.name)}</div>
+          <div class="phone-card-status ${d.status}"></div>
+        </div>
+        <div class="phone-screen" onclick="handleScreenClick('${d.id}', event)">
+          ${screenContent}
+        </div>
+        <div class="phone-card-foot">
+          <span>${escapeHtml(d.model)}</span>
+          <span class="battery">🔋 ${d.battery??'--'}%</span>
+          ${timer}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  updateSyncUI();
 }
 
 function escapeHtml(s){
@@ -437,111 +721,173 @@ function escapeHtml(s){
 }
 
 /* ============================================================
-   ACTIONS
+   SELECTION
 ============================================================ */
-function selectDevice(id){ selectedId = id; renderDeviceList(); renderScreen(); }
-function openAddModal(){ document.getElementById('addModal').classList.add('show'); }
+function toggleSelect(id, e){
+  if(e) e.stopPropagation();
+  if(selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  render();
+}
+
+function clearSelection(){
+  selectedIds.clear();
+  syncMode = false;
+  render();
+}
+
+function selectAll(){
+  if(selectedIds.size === devices.length){
+    selectedIds.clear();
+  } else {
+    devices.forEach(d => selectedIds.add(d.id));
+  }
+  render();
+}
+
+function updateSyncUI(){
+  const n = selectedIds.size;
+  const controls = document.getElementById('syncControls');
+  const countEl = document.getElementById('syncCount');
+  const banner = document.getElementById('syncBanner');
+  const syncText = document.getElementById('syncText');
+  const selectAllBtn = document.getElementById('selectAllBtn');
+
+  countEl.textContent = n;
+  controls.classList.toggle('show', n > 0);
+
+  if(syncMode && n > 1){
+    banner.classList.add('show');
+    syncText.textContent = `Sync ON — ${n} máy sẽ nhận cùng thao tác`;
+  } else {
+    banner.classList.remove('show');
+  }
+
+  if(n === devices.length && devices.length > 0){
+    selectAllBtn.textContent = '☐ Bỏ chọn tất cả';
+  } else {
+    selectAllBtn.textContent = '☑️ Chọn tất cả';
+  }
+
+  const btn = document.getElementById('syncToggleBtn');
+  if(btn){
+    if(syncMode) btn.textContent = '⚡ Sync OFF';
+    else btn.textContent = '⚡ Sync ON';
+  }
+}
+
+function syncToggle(){
+  syncMode = !syncMode;
+  if(syncMode && selectedIds.size < 2){
+    toast('Chọn ít nhất 2 máy để bật Sync');
+    syncMode = false;
+  } else if(syncMode){
+    toast(`⚡ Sync ON — ${selectedIds.size} máy cùng nhận thao tác`);
+  } else {
+    toast('Sync OFF');
+  }
+  render();
+}
+
+function handleScreenClick(id, e){
+  if(syncMode && selectedIds.size >= 2){
+    // Sync: gửi thao tác tới tất cả máy đã chọn
+    const targets = [...selectedIds];
+    targets.forEach(tid => {
+      const card = document.querySelector(`.phone-card[data-id="${tid}"] .phone-screen`);
+      if(card){ card.classList.add('sync-flash'); setTimeout(() => card.classList.remove('sync-flash'), 300); }
+    });
+    toast(`⚡ Sync: chạm gửi tới ${targets.length} máy`);
+  } else {
+    // Chưa bật sync: chỉ chọn máy này
+    toggleSelect(id, e);
+  }
+}
+
+/* ============================================================
+   COMMANDS (Fleet)
+============================================================ */
+function cmdFleet(action){
+  const targets = selectedIds.size > 0 ? [...selectedIds] : devices.map(d => d.id);
+  if(targets.length === 0){ toast('Chưa có máy nào'); return; }
+
+  targets.forEach(id => {
+    const d = devices.find(x => x.id === id);
+    if(!d) return;
+    switch(action){
+      case 'power':
+        if(d.status === 'offline'){
+          d.status = 'booting';
+          setTimeout(() => { d.status='online'; saveDevices(); render(); }, 1600);
+        } else d.status = 'offline';
+        break;
+      case 'screenshot':
+        toast(`📸 Đã chụp ${targets.length} máy`);
+        return;
+    }
+  });
+  saveDevices();
+  render();
+  if(action !== 'screenshot') toast(`Đã gửi "${action}" tới ${targets.length} máy`);
+}
+
+/* ============================================================
+   SIZE
+============================================================ */
+function setSize(size){
+  gridSize = size;
+  localStorage.setItem('tcloudphone_gridSize', size);
+  const grid = document.getElementById('phoneGrid');
+  grid.classList.remove('small','large');
+  grid.classList.add(size);
+  document.getElementById('sizeSmall').classList.toggle('active', size==='small');
+  document.getElementById('sizeLarge').classList.toggle('active', size==='large');
+}
+
+/* ============================================================
+   HERO BANNER
+============================================================ */
+function closeHero(){
+  document.getElementById('heroBanner').style.display = 'none';
+  localStorage.setItem('tcloudphone_heroClosed', '1');
+}
+if(localStorage.getItem('tcloudphone_heroClosed') === '1'){
+  document.getElementById('heroBanner').style.display = 'none';
+}
+
+/* ============================================================
+   SETTINGS
+============================================================ */
 function openSettings(){
   document.getElementById('fApiBase').value = config.apiBase || '';
-  document.getElementById('demoSwitch').classList.toggle('on', config.demo);
+  updateDemoSwitch();
   document.getElementById('settingsModal').classList.add('show');
 }
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
-function toggleDemo(){ config.demo = !config.demo; document.getElementById('demoSwitch').classList.toggle('on', config.demo); }
+function toggleDemo(){
+  config.demo = !config.demo;
+  updateDemoSwitch();
+}
+function updateDemoSwitch(){
+  const sw = document.getElementById('demoSwitch');
+  const knob = sw.querySelector('div');
+  if(config.demo){
+    sw.style.background = 'var(--accent-2)';
+    knob.style.left = '23px';
+  } else {
+    sw.style.background = '#2a3546';
+    knob.style.left = '3px';
+  }
+}
 function saveSettings(){
   config.apiBase = document.getElementById('fApiBase').value.trim();
   saveConfig(); closeModal('settingsModal');
   toast('Đã lưu: ' + (config.demo ? 'DEMO' : 'LIVE'));
 }
-async function testApi(){
-  const url = document.getElementById('fApiBase').value.trim();
-  if(!url){ toast('Nhập URL trước'); return; }
-  try{
-    const r = await fetch(url.replace(/\/$/,'') + '/api/health');
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    toast('✅ Kết nối OK');
-  } catch(e){ toast('❌ ' + e.message); }
-}
 
-async function addDevice(){
-  const name = document.getElementById('fName').value.trim();
-  if(!name){ toast('Nhập tên thiết bị'); return; }
-  const dev = {
-    id: 'd' + Date.now(), name,
-    model: document.getElementById('fModel').value.trim() || 'Exynos 8895 · 6GB RAM',
-    android: document.getElementById('fAndroid').value,
-    res: document.getElementById('fRes').value.trim() || '1080x2400',
-    ip: document.getElementById('fIp').value.trim() || '127.0.0.1:5555',
-    status: 'booting', battery: 100,
-  };
-  try{ await apiCall('/api/devices', 'POST', dev); }
-  catch(e){ toast('Lỗi: ' + e.message); return; }
-  devices.push(dev); saveDevices(); selectedId = dev.id;
-  renderDeviceList(); renderScreen(); closeModal('addModal');
-  toast('Đã tạo ' + name);
-  setTimeout(() => { dev.status = 'online'; saveDevices(); renderDeviceList(); if(selectedId===dev.id) renderScreen(); }, 1800);
-}
-
-async function removeSelected(){
-  const d = getSelected();
-  if(!d) return;
-  if(!confirm('Xoá "' + d.name + '"?')) return;
-  try{ await apiCall('/api/devices/' + d.id, 'DELETE'); } catch(e){}
-  devices = devices.filter(x => x.id !== d.id);
-  saveDevices(); selectedId = devices[0]?.id || null;
-  renderDeviceList(); renderScreen(); toast('Đã xoá');
-}
-
-async function cmd(action){
-  const d = getSelected();
-  if(!d){ toast('Chưa chọn thiết bị'); return; }
-  log('adb -s ' + (d.ip||'---') + ' ' + action, 'cmd');
-  try{ if(!config.demo) await apiCall('/api/devices/'+d.id+'/cmd', 'POST', {action}); }
-  catch(e){ log('Lỗi: ' + e.message, 'err'); }
-
-  switch(action){
-    case 'power':
-      if(d.status === 'offline'){
-        d.status = 'booting';
-        setTimeout(() => { d.status='online'; saveDevices(); renderDeviceList(); renderScreen(); }, 1600);
-      } else d.status = 'offline';
-      saveDevices(); renderDeviceList(); renderScreen();
-      toast('Nguồn: ' + d.status); break;
-    case 'rotate': document.getElementById('phoneFrame').classList.toggle('landscape'); toast('Xoay'); break;
-    case 'screenshot': toast('📸 Đã chụp'); break;
-    case 'reboot':
-      d.status='booting'; renderScreen();
-      setTimeout(() => { d.status='online'; saveDevices(); renderDeviceList(); renderScreen(); toast('Đã reboot'); }, 2000);
-      break;
-    default: toast('Lệnh: ' + action);
-  }
-}
-
-async function sendAdb(){
-  const inp = document.getElementById('adbInput');
-  const val = inp.value.trim();
-  if(!val) return;
-  const d = getSelected();
-  log('adb -s ' + (d?d.ip:'---') + ' ' + val, 'cmd');
-  try{
-    const r = await apiCall('/api/devices/'+(d?.id||'')+'/adb', 'POST', {cmd: val});
-    log(r.stdout || r.stderr || 'OK');
-  } catch(e){
-    if(val.includes('list packages')) log('package:com.android.chrome\n...(demo)');
-    else log('OK (demo)');
-  }
-  inp.value = '';
-}
-
-function log(text, cls=''){
-  const c = document.getElementById('console');
-  const line = document.createElement('div');
-  line.className = cls;
-  line.textContent = '> ' + text;
-  c.appendChild(line);
-  c.scrollTop = c.scrollHeight;
-}
-
+/* ============================================================
+   TOAST
+============================================================ */
 let toastTimer;
 function toast(msg){
   const t = document.getElementById('toast');
@@ -550,8 +896,10 @@ function toast(msg){
   toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
+function scrollTop(){ window.scrollTo({top:0,behavior:'smooth'}); }
+
 /* ============================================================
-   RENTAL EXPIRY CHECK (mỗi 1s)
+   RENTAL EXPIRY CHECK
 ============================================================ */
 function checkRentalExpiry(){
   const rentals = getRentals();
@@ -564,22 +912,15 @@ function checkRentalExpiry(){
     }
   });
   if(changed){
-    saveRentals(rentals); saveDevices(); renderDeviceList();
-    if(getSelected()?.status === 'online') renderScreen();
+    saveRentals(rentals); saveDevices(); render();
     toast('⏰ Có máy hết hạn thuê');
   }
-  // Cập nhật countdown trên UI mỗi giây
-  if(getRentals().some(r => r.status === 'active')){
-    renderDeviceList();
-    const d = getSelected();
-    if(d) renderScreen();
-  }
+  // update timer UI mỗi 1s
+  if(getRentals().some(r => r.status === 'active')) render();
 }
 setInterval(checkRentalExpiry, 1000);
 
-/* ============================================================
-   BATTERY SIM
-============================================================ */
+/* BATTERY SIM */
 setInterval(() => {
   let changed = false;
   devices.forEach(d => {
@@ -588,7 +929,7 @@ setInterval(() => {
       changed = true;
     }
   });
-  if(changed){ saveDevices(); renderDeviceList(); if(getSelected()?.status==='online') renderScreen(); }
+  if(changed){ saveDevices(); render(); }
 }, 15000);
 
 /* ============================================================
@@ -596,8 +937,8 @@ setInterval(() => {
 ============================================================ */
 loadConfig();
 loadDevices();
-renderDeviceList();
-renderScreen();
+setSize(gridSize);
+render();
 updateHeaderBalance();
 setInterval(updateHeaderBalance, 5000);
 
